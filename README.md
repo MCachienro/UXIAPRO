@@ -82,6 +82,23 @@ cd backend
 ../venv/bin/python manage.py runserver
 ```
 
+## Frontend: entorno local
+
+Desde otra terminal, en la raiz del proyecto:
+
+```bash
+source venv/bin/activate
+cd frontend
+npm install
+npm start
+```
+
+Opcional: definir la URL de la API si no usas el valor por defecto.
+
+```bash
+REACT_APP_API_URL=http://127.0.0.1:8000/api npm start
+```
+
 ## API Sprint 1 - Actividad 2 (curl)
 
 Base URL local:
