@@ -1,0 +1,4 @@
+Django==5.2.13
+django-ninja==1.6.2
+Pillow==12.2.0
+Faker==37.1.0
