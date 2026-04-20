@@ -1,8 +1,19 @@
 import { render, screen } from '@testing-library/react';
+import axios from 'axios';
 import App from './App';
 
-test('renders learn react link', () => {
+jest.mock('axios');
+
+test('renders expo search input', async () => {
+  axios.get.mockResolvedValueOnce({
+    data: [{ id: 1, nom: 'Expo Test', descripcio: null, estat: 'INIT' }],
+  });
+
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const headerElement = screen.getByText(/uxia expos/i);
+  expect(headerElement).toBeInTheDocument();
+
+  const searchInput = await screen.findByLabelText(/buscador d/i);
+  expect(searchInput).toBeInTheDocument();
+  expect(searchInput.value).toBe('');
 });
