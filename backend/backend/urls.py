@@ -16,7 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from api.api import api as uxia_api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', uxia_api.urls),
 ]
