@@ -3,6 +3,7 @@ __pycache__/
 db.sqlite3
 node_modules/
 .env
+env/
 *.log
 backend/media/
 01_Documentacio_General.txt
