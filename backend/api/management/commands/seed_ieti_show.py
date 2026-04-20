@@ -48,6 +48,12 @@ class Command(BaseCommand):
         )
         ruta_base_fotos = os.path.join(settings.BASE_DIR, 'media', 'cotxes')
 
+        # --- CAMBIO AQUÍ: Eliminar todos los items existentes para esta expo ---
+        # Esto soluciona el error MultipleObjectsReturned garantizando una hoja en blanco
+        Item.objects.filter(expo=expo).delete()
+        self.stdout.write("Limpieza realizada: todos los items de la expo han sido eliminados.")
+        # ---------------------------------------------------------------------
+
         if expo.descripcio != "Exposición oficial del centro IETI":
             expo.descripcio = "Exposición oficial del centro IETI"
             expo.save(update_fields=["descripcio", "data_actualitzacio"])
@@ -104,18 +110,18 @@ class Command(BaseCommand):
             },
         ]
 
-        noms_catalog = {coche["nom"] for coche in coches}
-        stale_items = Item.objects.filter(expo=expo).exclude(nom__in=noms_catalog)
-        if stale_items.exists():
-            stale_count = stale_items.count()
-            stale_items.delete()
-            self.stdout.write(f"Items fuera de catalogo eliminados: {stale_count}")
+        # noms_catalog = {coche["nom"] for coche in coches}
+        # stale_items = Item.objects.filter(expo=expo).exclude(nom__in=noms_catalog)
+        # if stale_items.exists():
+            # stale_count = stale_items.count()
+            # stale_items.delete()
+            # self.stdout.write(f"Items fuera de catalogo eliminados: {stale_count}")
 
         for coche in coches:
-            item, _ = Item.objects.update_or_create(
-                expo=expo,
+            item = Item.objects.create( # Puedes cambiar a .create() directamente
+                expo=expo, 
                 nom=coche["nom"],
-                defaults={"descripcio": coche["descripcio"]},
+                descripcio=coche["descripcio"]
             )
 
             # Limpiar imágenes previas para regenerar destacada + secundarias.
