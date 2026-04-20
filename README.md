@@ -82,6 +82,23 @@ cd backend
 ../venv/bin/python manage.py runserver
 ```
 
+## Frontend: entorno local
+
+Desde otra terminal, en la raiz del proyecto:
+
+```bash
+source venv/bin/activate
+cd frontend
+npm install
+npm start
+```
+
+Opcional: definir la URL de la API si no usas el valor por defecto.
+
+```bash
+REACT_APP_API_URL=http://127.0.0.1:8000/api npm start
+```
+
 ## API Sprint 1 - Actividad 2 (curl)
 
 Base URL local:
@@ -115,3 +132,17 @@ curl -s http://127.0.0.1:8000/api/items/1 | jq
 ```
 
 Nota: si no tienes jq instalado, puedes quitar el pipe | jq y veras el JSON en una sola linea.
+
+## Seeder temporal para pruebas UI
+
+Si necesitais probar frontend antes de tener los seeders definitivos:
+
+```bash
+cd backend
+../venv/bin/python manage.py seed_demo --reset --expos 3 --items-per-expo 4
+```
+
+Este comando crea expos e items con imagenes publicas de demo para validar:
+- Buscador/autocompletado de expos
+- Carrusel de la expo
+- Modal de detalle superpuesto del item
