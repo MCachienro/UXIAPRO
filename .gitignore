@@ -5,7 +5,6 @@ node_modules/
 .env
 env/
 *.log
-backend/media/
 01_Documentacio_General.txt
 02_Base_de_Dades.txt
 03_Planificacio_Projecte.txt
