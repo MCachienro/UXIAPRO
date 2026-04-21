@@ -22,6 +22,7 @@ function App() {
 
   useEffect(() => {
     const fetchExpos = async () => {
+      setStatus('loading');
       setLoading(true);
       try {
         const url = searchTerm
@@ -29,8 +30,10 @@ function App() {
           : `${API_BASE_URL}/expos`;
         const response = await axios.get(url);
         setExpos(response.data);
+        setStatus('ok');
       } catch (error) {
         console.error("Error fetching expos:", error);
+        setStatus('error');
       } finally {
         setLoading(false);
       }
