@@ -44,6 +44,13 @@ def list_expos(request):
     return Expo.objects.all().order_by("id")
 
 
+@api.get("/expos/search", response=List[ExpoOut], tags=["Expos"])
+def search_expos(request, q: Optional[str] = None):
+    if q:
+        return Expo.objects.filter(nom__icontains=q).order_by("id")
+    return Expo.objects.all().order_by("id")
+
+
 @api.get("/expos/{expo_id}", response=ExpoOut, tags=["Expos"])
 def get_expo(request, expo_id: int):
     expo = Expo.objects.filter(id=expo_id).first()
