@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import Footer from './components/Footer';
+import IdentificationForm from './components/IdentificationForm';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api';
 
@@ -252,6 +253,9 @@ function App() {
         {selectedExpoId !== '' && itemsStatus === 'ok' && items.length === 0 && (
           <p className="mt-4 text-sm text-slate-600">Aquesta expo encara no te items per mostrar.</p>
         )}
+
+        {/* Formulari IA */}
+        {selectedExpoId && <IdentificationForm selectedExpoId={selectedExpoId} />}
 
         {selectedExpoId !== '' && itemsStatus === 'ok' && items.length > 0 && (
           <section className="mt-4 rounded-2xl border border-emerald-100 bg-white/90 p-3 shadow-[0_14px_35px_rgba(15,23,42,0.08)] sm:p-4 md:p-5">
