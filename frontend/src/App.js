@@ -370,21 +370,28 @@ function App() {
                   </div>
 
                   {detailImages.length > 1 && (
-                    <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                    <div className="mt-3 flex items-center justify-center gap-4">
                       <button
-                        className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-800 sm:text-sm"
+                        aria-label="Anterior"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
                         onClick={goPrevDetailImage}
                         type="button"
                       >
-                        Anterior
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="h-5 w-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
                       </button>
                       <p className="text-center text-xs font-bold text-slate-800 sm:text-sm">{detailImageIndex + 1} / {detailImages.length}</p>
+                      {/* Botón Següent */}
                       <button
-                        className="rounded-lg bg-orange-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-orange-700 sm:text-sm"
+                        aria-label="Seguent"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
                         onClick={goNextDetailImage}
                         type="button"
                       >
-                        Seguent
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="h-5 w-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
                       </button>
                     </div>
                   )}
