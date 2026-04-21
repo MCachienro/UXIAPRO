@@ -22,7 +22,7 @@ from api.api import api as uxia_api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', uxia_api.urls),
+    path('', uxia_api.urls),
 ]
 
 if settings.DEBUG:
