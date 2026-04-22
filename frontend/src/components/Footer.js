@@ -1,13 +1,16 @@
+import logoGeneralitat from '../assets/logo-generalitat.png';
+import logoMinisterioFP from '../assets/logo-ministerio-fp.png';
+
 const FOOTER_LOGOS = [
   {
     name: 'Generalitat de Catalunya',
     href: 'https://sites.google.com/xtec.cat/proyectos-de-innovacion/inicio',
-    image: '/logos/logo-generalitat.png',
+    image: logoGeneralitat,
   },
   {
     name: 'Ministerio de Educacion y FP',
     href: 'https://www.boe.es/boe/dias/2023/09/01/pdfs/BOE-B-2023-24805.pdf',
-    image: '/logos/logo-ministerio-fp.png',
+    image: logoMinisterioFP,
   },
 ];
 
