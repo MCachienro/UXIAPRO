@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-*w7#5(0js(_pxai9&9gw!lkeuxl01bz9e!0emj5cfo+h=5_bw1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "uxiaweb1.ieti.site"]
 
 
 # Application definition
@@ -119,7 +119,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATIC_ROOT = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -134,3 +134,5 @@ CORS_ALLOWED_ORIGINS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CSRF_TRUSTED_ORIGINS = ['https://uxiaweb1.ieti.site']
