@@ -5,6 +5,7 @@ import IdentificationForm from './components/IdentificationForm';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
+
 function App() {
   const [status, setStatus] = useState('loading');
   const [expos, setExpos] = useState([]);
