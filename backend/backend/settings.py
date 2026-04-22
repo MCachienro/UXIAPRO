@@ -135,4 +135,5 @@ CORS_ALLOWED_ORIGINS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CSRF_TRUSTED_ORIGINS = ['https://uxiaweb1.ieti.site']
+CSRF_COOKIE_HTTPONLY = False  # Permite que JavaScript acceda a la cookie
+CSRF_TRUSTED_ORIGINS = ['https://uxiaweb1.ieti.site'] # Tu dominio
