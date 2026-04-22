@@ -23,7 +23,9 @@ from api.views import procesar_identificacion
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/identificar/', procesar_identificacion),
     path('identificar/', procesar_identificacion),
+    path('api/', uxia_api.urls),
     path('', uxia_api.urls),
 ]
 

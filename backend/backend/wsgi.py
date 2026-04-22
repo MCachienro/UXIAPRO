@@ -8,6 +8,13 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Cargar .env antes de configurar Django para que mod_wsgi tome DATABASE_URL
+BASE_DIR = Path(__file__).resolve().parent.parent
+env_path = BASE_DIR / '.env'
+load_dotenv(dotenv_path=env_path)
 
 from django.core.wsgi import get_wsgi_application
 
