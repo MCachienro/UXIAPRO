@@ -24,6 +24,22 @@ export default function IdentificationForm({ selectedExpoId }) {
   }, []);
 
   useEffect(() => {
+    const attachStream = async () => {
+      if (!cameraActive || !videoRef.current || !streamRef.current) {
+        return;
+      }
+      videoRef.current.srcObject = streamRef.current;
+      try {
+        await videoRef.current.play();
+      } catch (_) {
+        setCameraError('La càmera s\'ha obert, pero el video no s\'ha pogut reproduir.');
+      }
+    };
+
+    attachStream();
+  }, [cameraActive]);
+
+  useEffect(() => {
     return () => {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
@@ -52,6 +68,7 @@ export default function IdentificationForm({ selectedExpoId }) {
 
     try {
       setCameraError('');
+      stopCamera();
       let stream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
@@ -66,18 +83,16 @@ export default function IdentificationForm({ selectedExpoId }) {
       }
 
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
       setCameraActive(true);
     } catch (error) {
       if (error && error.name === 'NotFoundError') {
         setCameraError('No s\'ha detectat cap càmera en aquest dispositiu.');
       } else if (error && (error.name === 'NotAllowedError' || error.name === 'SecurityError')) {
         setCameraError('Permís de càmera denegat. Activa\'l al navegador i torna-ho a provar.');
+      } else if (error && error.name === 'NotReadableError') {
+        setCameraError('La càmera està ocupada per una altra app o pestanya.');
       } else {
-        setCameraError('No s\'ha pogut activar la càmera.');
+        setCameraError(`No s'ha pogut activar la càmera (${error?.name || 'Error'}).`);
       }
       setCameraActive(false);
     }
