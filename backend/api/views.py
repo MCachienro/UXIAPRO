@@ -1,9 +1,11 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 from .models import Intent, Expo
 from .services.ai_service import analizar_coche_con_ai
 
+@csrf_exempt
 def procesar_identificacion(request):
     if request.method == 'POST' and request.FILES.get('foto'):
         expo_id = request.POST.get('expo_id')

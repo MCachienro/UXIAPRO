@@ -19,9 +19,11 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 from api.api import api as uxia_api
+from api.views import procesar_identificacion
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('identificar/', procesar_identificacion),
     path('', uxia_api.urls),
 ]
 
