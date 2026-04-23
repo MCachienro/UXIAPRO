@@ -7,7 +7,6 @@ import ExpoCarousel from './components/ExpoCarousel';
 import ItemDetailModal from './components/ItemDetailModal';
 import Footer from './components/Footer';
 import IdentificationForm from './components/IdentificationForm';
-import { useItemDetail } from './hooks/useItemDetail';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
