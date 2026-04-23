@@ -19,8 +19,11 @@ function App() {
   const selectedExpo = expos.find((e) => String(e.id) === selectedExpoId);
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4">
-      <main className="max-w-6xl mx-auto">
+    // 1. Añadimos flex flex-col para controlar la distribución vertical
+    <div className="flex flex-col min-h-screen bg-slate-100">
+      
+      {/* 2. Añadimos flex-grow (flex-1) para que ocupe todo el espacio sobrante */}
+      <main className="flex-1 w-full max-w-6xl mx-auto p-4">
         <header className="mb-5">
           <h1 className="text-4xl font-black uppercase">UXIA Expos</h1>
         </header>
@@ -48,7 +51,10 @@ function App() {
           />
         )}
       </main>
+
+      {/* 3. El Footer ahora se empujará hacia abajo automáticamente gracias al mt-auto que ya tenías */}
       <Footer />
+      
       {detailItemId && (
         <ItemDetailModal 
           itemId={detailItemId} 
