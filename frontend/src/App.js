@@ -48,14 +48,13 @@ function App() {
           />
         )}
       </main>
-
+      <Footer />
       {detailItemId && (
         <ItemDetailModal 
           itemId={detailItemId} 
           onClose={() => setDetailItemId(null)} 
         />
       )}
-      <Footer />
     </div>
   );
 }
