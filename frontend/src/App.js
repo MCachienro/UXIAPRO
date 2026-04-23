@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useExpos } from './hooks/useExpos';
 import { useExpoItems } from './hooks/useExpoItems';
+import { useItemDetail } from './hooks/useItemDetail';
 import ExpoSearch from './components/ExpoSearch';
 import ExpoCarousel from './components/ExpoCarousel';
 import ItemDetailModal from './components/ItemDetailModal';
 import Footer from './components/Footer';
 import IdentificationForm from './components/IdentificationForm';
+import { useItemDetail } from './hooks/useItemDetail';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
