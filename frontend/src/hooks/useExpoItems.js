@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 
-export const useExpos = (selectedExpoId) => {
+export const useExpoItems = (selectedExpoId) => {
     const [items, setItems] = useState([]);
     const [itemsStatus, setItemsStatus] = useState('idle');
 
