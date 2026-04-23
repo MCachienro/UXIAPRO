@@ -13,6 +13,25 @@ export default function IdentificationForm({ selectedExpoId }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [photo, setPhoto] = useState(null); // La foto capturada
+  const [result, setResult] = useState(null); // Resultado de la IA
+  const fileInputRef = useRef(null);
+
+  // ESTA ES LA CLAVE: Limpiar todo antes de abrir la cámara
+  const handleStartCapture = () => {
+    setPhoto(null);
+    setResult(null);
+    setIsCameraOpen(true);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhoto(URL.createObjectURL(file));
+      setIsCameraOpen(false); // Cerramos "modo cámara" una vez tomada
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -140,76 +159,79 @@ export default function IdentificationForm({ selectedExpoId }) {
 
   return (
     <section className="mt-6 rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-[0_14px_35px_rgba(15,23,42,0.08)]">
-        <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Identificació IDEM</h2>
+      <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Identificació IDEM</h2>
+
+      {/* 1. VISTA DE CÁMARA ACTIVA */}
+      {cameraActive ? (
+        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg" />
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={capturePhoto}
+              type="button"
+              className="rounded-lg bg-emerald-600 px-4 py-2 font-bold text-white transition hover:bg-emerald-700"
+            >
+              Fer foto
+            </button>
+            <button
+              onClick={stopCamera}
+              type="button"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
+            >
+              Tancar càmera
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* 2. VISTA DE ESTADO IDLE / PREVISUALIZACIÓN (Cuando la cámara está cerrada) */
         <div className="mt-3 flex flex-col gap-3">
-            {!cameraActive && (
-              <button
-                onClick={startCamera}
-                type="button"
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
-              >
-                Obrir càmera
-              </button>
-            )}
+          {cameraError && <p className="text-sm font-semibold text-red-700">{cameraError}</p>}
 
-            {cameraActive && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg" />
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={capturePhoto}
-                    type="button"
-                    className="rounded-lg bg-emerald-600 px-4 py-2 font-bold text-white transition hover:bg-emerald-700"
-                  >
-                    Fer foto
-                  </button>
-                  <button
-                    onClick={stopCamera}
-                    type="button"
-                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Tancar càmera
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {cameraError && <p className="text-sm font-semibold text-red-700">{cameraError}</p>}
-
-            {previewUrl && (
+          {previewUrl ? (
+            <>
               <img
                 src={previewUrl}
                 alt="Previsualitzacio captura"
                 className="max-h-64 w-full rounded-lg border border-slate-200 object-contain bg-slate-50"
               />
-            )}
-
-            {previewUrl && !cameraActive && (
-              <button
-                onClick={startCamera}
-                type="button"
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
-              >
-                Fer una altra foto
-              </button>
-            )}
-
+              <div className="flex gap-2">
+                <button
+                  onClick={startCamera}
+                  type="button"
+                  className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Fer una altra foto
+                </button>
+                <button
+                  onClick={handleIdentify}
+                  disabled={isIdentifying || !idFile}
+                  className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 font-bold text-white transition hover:bg-emerald-700 disabled:bg-slate-300"
+                >
+                  {isIdentifying ? 'Analitzant...' : 'Enviar foto'}
+                </button>
+              </div>
+            </>
+          ) : (
             <button
-            onClick={handleIdentify}
-            disabled={isIdentifying || !idFile}
-            className="rounded-lg bg-emerald-600 px-4 py-2 font-bold text-white transition hover:bg-emerald-700 disabled:bg-slate-300"
+              onClick={startCamera}
+              type="button"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
             >
-            {isIdentifying ? 'Analitzant amb MarIA 2...' : 'Enviar foto per identificar'}
+              Obrir càmera
             </button>
+          )}
         </div>
-        <canvas ref={canvasRef} className="hidden" />
+      )}
 
-        {aiResult && (
-            <div className="mt-4 rounded-lg bg-slate-50 p-3 border border-slate-200">
-            <p className="text-xs font-bold text-slate-400 uppercase">Resultat de la IA:</p>
-            <p className="mt-1 text-sm text-slate-800">{aiResult}</p>
-            </div>
-        )}
+      {/* Elementos ocultos o resultados */}
+      <canvas ref={canvasRef} className="hidden" />
+
+      {aiResult && (
+        <div className="mt-4 rounded-lg bg-slate-50 p-3 border border-slate-200">
+          <p className="text-xs font-bold text-slate-400 uppercase">Resultat de la IA:</p>
+          <p className="mt-1 text-sm text-slate-800">{aiResult}</p>
+        </div>
+      )}
     </section>
   );
 }
