@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useState, useEffect } from 'react';
 
 export const useExpos = (searchTerm) => {
-    const [data, setData] = useSTate([]);
+    const [data, setData] = useState([]);
     const [status, setStatus] = useState('loading');
 
     useEffect(() => {

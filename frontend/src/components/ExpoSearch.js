@@ -3,7 +3,7 @@ export default function ExpoSearch({ searchQuery, setSearchQuery, selectedExpoId
     const shouldShowSuggestions = status === 'ok' && normalizedQuery.length >= 3 && selectedExpoId === '';
 
     const suggestedExpos = expos.filter((expo) => 
-        expos.nom.toLowerCase().includes(normalizedQuery)
+        expo.nom.toLowerCase().includes(normalizedQuery)
     ).slice(0, 8);
 
     return (
