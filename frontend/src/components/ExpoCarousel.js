@@ -1,8 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function ExpoCarousel({ items, selectedExpo, onItemClick }) {
+export default function ExpoCarousel({ items, selectedExpo, onItemClick, activeItemId }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const currentItem = items[currentIndex];
+
+    useEffect(() => {
+        if (!items.length) {
+            setCurrentIndex(0);
+            return;
+        }
+
+        if (activeItemId) {
+            const matchedIndex = items.findIndex((item) => item.id === activeItemId);
+            if (matchedIndex >= 0) {
+                setCurrentIndex(matchedIndex);
+                return;
+            }
+        }
+
+        setCurrentIndex(0);
+    }, [activeItemId, items]);
 
     const goPrev = () => setCurrentIndex((prev) => (prev-1 + items.length) % items.length);
     const goNext = () => setCurrentIndex((prev) => (prev + 1) % items.length);

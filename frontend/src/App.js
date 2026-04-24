@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useExpos } from './hooks/useExpos';
 import { useExpoItems } from './hooks/useExpoItems';
-import { useItemDetail } from './hooks/useItemDetail';
+import { useSearchResults } from './hooks/useSearchResults';
 import ExpoSearch from './components/ExpoSearch';
 import ExpoCarousel from './components/ExpoCarousel';
 import ItemDetailModal from './components/ItemDetailModal';
@@ -12,17 +12,37 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedExpoId, setSelectedExpoId] = useState('');
   const [detailItemId, setDetailItemId] = useState(null);
+  const [activeItemId, setActiveItemId] = useState(null);
 
-  const { expos, status } = useExpos(searchQuery);
+  const { expos } = useExpos('');
+  const { results, status } = useSearchResults(searchQuery);
   const { items, itemsStatus } = useExpoItems(selectedExpoId);
 
   const selectedExpo = expos.find((e) => String(e.id) === selectedExpoId);
 
+  const handleSelectExpo = (expo) => {
+    setSearchQuery(expo.nom);
+    setSelectedExpoId(String(expo.id));
+    setActiveItemId(null);
+    setDetailItemId(null);
+  };
+
+  const handleSelectItem = (item) => {
+    setSearchQuery(item.nom);
+    setSelectedExpoId(String(item.expo_id));
+    setActiveItemId(item.id);
+    setDetailItemId(item.id);
+  };
+
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
+    setSelectedExpoId('');
+    setActiveItemId(null);
+    setDetailItemId(null);
+  };
+
   return (
-    // 1. Añadimos flex flex-col para controlar la distribución vertical
     <div className="flex flex-col min-h-screen bg-slate-100">
-      
-      {/* 2. Añadimos flex-grow (flex-1) para que ocupe todo el espacio sobrante */}
       <main className="flex-1 w-full max-w-6xl mx-auto p-4">
         <header className="mb-5">
           <h1 className="text-4xl font-black uppercase">UXIA Expos</h1>
@@ -30,15 +50,13 @@ function App() {
 
         <ExpoSearch 
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+          setSearchQuery={handleSearchChange}
           selectedExpoId={selectedExpoId}
           setSelectedExpoId={setSelectedExpoId}
-          expos={expos}
+          results={results}
           status={status}
-          onSelectExpo={(e) => {
-            setSearchQuery(e.nom);
-            setSelectedExpoId(String(e.id));
-          }}
+          onSelectExpo={handleSelectExpo}
+          onSelectItem={handleSelectItem}
         />
 
         {selectedExpoId && <IdentificationForm selectedExpoId={selectedExpoId} />}
@@ -47,12 +65,15 @@ function App() {
           <ExpoCarousel 
             items={items} 
             selectedExpo={selectedExpo}
-            onItemClick={setDetailItemId}
+            onItemClick={(itemId) => {
+              setActiveItemId(itemId);
+              setDetailItemId(itemId);
+            }}
+            activeItemId={activeItemId}
           />
         )}
       </main>
 
-      {/* 3. El Footer ahora se empujará hacia abajo automáticamente gracias al mt-auto que ya tenías */}
       <Footer />
       
       {detailItemId && (
