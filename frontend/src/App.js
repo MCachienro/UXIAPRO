@@ -26,6 +26,9 @@ function App() {
       <main className="flex-1 w-full max-w-6xl mx-auto p-4">
         <header className="mb-5">
           <h1 className="text-4xl font-black uppercase">UXIA Expos</h1>
+          <Link to="/admin/login" className="text-sm font-bold text-emerald-700 hover:underline">
+            Accés Admin
+          </Link>
         </header>
 
         <ExpoSearch 
