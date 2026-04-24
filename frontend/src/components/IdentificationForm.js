@@ -3,7 +3,8 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
-export default function IdentificationForm({ selectedExpoId }) {
+export default function IdentificationForm({ selectedExpoId, onLoginSuccess, forcedAdminMode = false }) {
+  // --- Estados para Cámara e IA ---
   const [idFile, setIdFile] = useState(null);
   const [aiResult, setAiResult] = useState(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
@@ -13,131 +14,76 @@ export default function IdentificationForm({ selectedExpoId }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [photo, setPhoto] = useState(null); // La foto capturada
-  const [result, setResult] = useState(null); // Resultado de la IA
-  const fileInputRef = useRef(null);
 
-  // ESTA ES LA CLAVE: Limpiar todo antes de abrir la cámara
-  const handleStartCapture = () => {
-    setPhoto(null);
-    setResult(null);
-    setIsCameraOpen(true);
-  };
+  // --- Estados para Login Admin ---
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPhoto(URL.createObjectURL(file));
-      setIsCameraOpen(false); // Cerramos "modo cámara" una vez tomada
+  // Lógica de Login de Administrador
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    setLoginError('');
+
+    // Validación contra las credenciales del Seeder (admin/admin123)
+    if (username === 'admin' && password === 'admin123') {
+      onLoginSuccess({ 
+        id: 1, 
+        username: 'admin', 
+        first_name: 'Admin UXIA' 
+      });
+    } else {
+      setLoginError('Usuari o contrasenya incorrectes.');
     }
   };
 
+  // --- Lógica de Cámara (Original) ---
   useEffect(() => {
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
       }
     };
   }, []);
 
-  useEffect(() => {
-    const attachStream = async () => {
-      if (!cameraActive || !videoRef.current || !streamRef.current) {
-        return;
-      }
-      videoRef.current.srcObject = streamRef.current;
-      try {
-        await videoRef.current.play();
-      } catch (_) {
-        setCameraError('La càmera s\'ha obert, pero el video no s\'ha pogut reproduir.');
-      }
-    };
-
-    attachStream();
-  }, [cameraActive]);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    setCameraActive(false);
-  };
-
   const startCamera = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setCameraError('Càmera no detectada en aquest dispositiu.');
-      return;
-    }
-
-    if (!window.isSecureContext) {
-      setCameraError('La càmera requereix connexió segura (HTTPS).');
-      return;
-    }
-
     try {
       setCameraError('');
-      stopCamera();
-      let stream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
-          audio: false,
-        });
-      } catch (_) {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
-      }
-
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
       streamRef.current = stream;
       setCameraActive(true);
-    } catch (error) {
-      if (error && error.name === 'NotFoundError') {
-        setCameraError('No s\'ha detectat cap càmera en aquest dispositiu.');
-      } else if (error && (error.name === 'NotAllowedError' || error.name === 'SecurityError')) {
-        setCameraError('Permís de càmera denegat. Activa\'l al navegador i torna-ho a provar.');
-      } else if (error && error.name === 'NotReadableError') {
-        setCameraError('La càmera està ocupada per una altra app o pestanya.');
-      } else {
-        setCameraError(`No s'ha pogut activar la càmera (${error?.name || 'Error'}).`);
-      }
-      setCameraActive(false);
+      if (videoRef.current) videoRef.current.srcObject = stream;
+    } catch (err) {
+      setCameraError('No s\'ha pogut accedir a la càmera.');
     }
   };
 
   const capturePhoto = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
-      return;
-    }
+    if (!video || !canvas) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.getContext('2d').drawImage(video, 0, 0);
 
     canvas.toBlob((blob) => {
-      if (!blob) {
-        return;
-      }
-      const photoFile = new File([blob], `captura-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      setIdFile(photoFile);
+      const file = new File([blob], "identificacio.jpg", { type: "image/jpeg" });
+      setIdFile(file);
       setPreviewUrl(URL.createObjectURL(blob));
       stopCamera();
-    }, 'image/jpeg', 0.9);
+    }, 'image/jpeg');
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    setCameraActive(false);
   };
 
   const handleIdentify = async () => {
@@ -148,88 +94,93 @@ export default function IdentificationForm({ selectedExpoId }) {
     formData.append('expo_id', selectedExpoId);
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/identificar/`, formData);
-      setAiResult(response.data.mensaje);
+      const res = await axios.post(`${API_BASE_URL}/identificar/`, formData);
+      setAiResult(res.data.mensaje);
     } catch (e) {
-      setAiResult("Error al processar.");
+      setAiResult("Error en la identificació.");
     } finally {
       setIsIdentifying(false);
     }
   };
 
-  return (
-    <section className="mt-6 rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-[0_14px_35px_rgba(15,23,42,0.08)]">
-      <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Identificació IDEM</h2>
+  // Renderizado Condicional: ¿Estamos logueando a un admin o identificando un objeto?
+  if (forcedAdminMode) {
+    return (
+      <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 animate-in zoom-in-95 duration-300">
+        <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">Accés Gestió</h2>
+        <form onSubmit={handleAdminLogin} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Usuari administrador</label>
+            <input 
+              type="text" 
+              className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Ex: admin"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Contrasenya</label>
+            <input 
+              type="password" 
+              className="w-full p-3 border rounded-xl bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          {loginError && <p className="text-red-500 text-sm font-bold text-center">{loginError}</p>}
+          <button 
+            type="submit" 
+            className="w-full bg-slate-800 text-white font-bold py-4 rounded-xl hover:bg-indigo-600 transition-colors shadow-lg"
+          >
+            Entrar al Dashboard
+          </button>
+        </form>
+      </div>
+    );
+  }
 
-      {/* 1. VISTA DE CÁMARA ACTIVA */}
+  return (
+    <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Identificació d'objectes</h2>
+      
       {cameraActive ? (
-        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg" />
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={capturePhoto}
-              type="button"
-              className="rounded-lg bg-emerald-600 px-4 py-2 font-bold text-white transition hover:bg-emerald-700"
-            >
-              Fer foto
-            </button>
-            <button
-              onClick={stopCamera}
-              type="button"
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
-            >
-              Tancar càmera
-            </button>
+        <div className="relative rounded-xl overflow-hidden bg-black">
+          <video ref={videoRef} autoPlay playsInline className="w-full h-64 object-cover" />
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+            <button onClick={capturePhoto} className="bg-white text-slate-900 px-6 py-2 rounded-full font-bold shadow-xl">Capturar</button>
+            <button onClick={stopCamera} className="bg-red-500 text-white p-2 rounded-full shadow-xl">✕</button>
           </div>
         </div>
       ) : (
-        /* 2. VISTA DE ESTADO IDLE / PREVISUALIZACIÓN (Cuando la cámara está cerrada) */
-        <div className="mt-3 flex flex-col gap-3">
-          {cameraError && <p className="text-sm font-semibold text-red-700">{cameraError}</p>}
-
-          {previewUrl ? (
-            <>
-              <img
-                src={previewUrl}
-                alt="Previsualitzacio captura"
-                className="max-h-64 w-full rounded-lg border border-slate-200 object-contain bg-slate-50"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={startCamera}
-                  type="button"
-                  className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Fer una altra foto
-                </button>
-                <button
-                  onClick={handleIdentify}
-                  disabled={isIdentifying || !idFile}
-                  className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 font-bold text-white transition hover:bg-emerald-700 disabled:bg-slate-300"
-                >
-                  {isIdentifying ? 'Analitzant...' : 'Enviar foto'}
-                </button>
-              </div>
-            </>
-          ) : (
-            <button
-              onClick={startCamera}
-              type="button"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
+        <div className="space-y-4">
+          {previewUrl && <img src={previewUrl} className="w-full h-48 object-cover rounded-xl border" alt="Preview" />}
+          <div className="flex gap-2">
+            <button 
+              onClick={startCamera} 
+              className="flex-1 border-2 border-dashed border-slate-200 py-6 rounded-xl text-slate-400 font-bold hover:bg-slate-50 transition"
             >
-              Obrir càmera
+              {previewUrl ? 'Canviar foto' : 'Obrir càmera'}
             </button>
-          )}
+            {previewUrl && (
+              <button 
+                onClick={handleIdentify} 
+                disabled={isIdentifying}
+                className="flex-1 bg-emerald-600 text-white rounded-xl font-bold"
+              >
+                {isIdentifying ? 'Analitzant...' : 'Identificar'}
+              </button>
+            )}
+          </div>
         </div>
       )}
-
-      {/* Elementos ocultos o resultados */}
       <canvas ref={canvasRef} className="hidden" />
-
       {aiResult && (
-        <div className="mt-4 rounded-lg bg-slate-50 p-3 border border-slate-200">
-          <p className="text-xs font-bold text-slate-400 uppercase">Resultat de la IA:</p>
-          <p className="mt-1 text-sm text-slate-800">{aiResult}</p>
+        <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <p className="text-sm text-slate-700">{aiResult}</p>
         </div>
       )}
     </section>
