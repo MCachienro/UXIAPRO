@@ -1,8 +1,11 @@
 import React from 'react';
+import { useAdminExpos } from '../hooks/useAdminExpos';
 
 const AdminDashboard = ({ user, allExpos, onLogout }) => {
   // Filtramos para mostrar solo las exposiciones del admin logueado
-  const myExpos = allExpos.filter(expo => expo.propietari === user.id);
+  const { adminExpos, loading } = useAdminExpos(!!user);
+
+  if (loading) return <div>Carregant...</div>;
 
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 animate-in fade-in">
@@ -26,17 +29,17 @@ const AdminDashboard = ({ user, allExpos, onLogout }) => {
       <section>
         <h3 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-2">
           📁 MyExpos 
-          <span className="text-sm font-normal text-slate-400">({myExpos.length})</span>
+          <span className="text-sm font-normal text-slate-400">({adminExpos.length})</span>
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {myExpos.map(expo => (
+          {adminExpos.map(expo => (
             <div key={expo.id} className="p-6 rounded-xl bg-slate-50 border-2 border-slate-100 hover:border-indigo-200 transition-colors">
               <h4 className="font-bold text-slate-800">{expo.nom}</h4>
               <p className="text-slate-500 text-sm mt-2">{expo.descripcio || 'Sense descripció'}</p>
             </div>
           ))}
-          {myExpos.length === 0 && (
+          {adminExpos.length === 0 && (
             <p className="text-slate-400 italic">No tens exposicions assignades.</p>
           )}
         </div>

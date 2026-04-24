@@ -17,14 +17,23 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include  # Añadimos 'include'
+from rest_framework.routers import DefaultRouter # Añadimos el router
 from api.api import api as uxia_api
-from api.views import procesar_identificacion
+from api.views import procesar_identificacion, ExpoViewSet # Importamos ExpoViewSet
+
+# 1. Configuramos el router para el ViewSet
+router = DefaultRouter()
+router.register(r'expos', ExpoViewSet, basename='expo')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/identificar/', procesar_identificacion),
     path('identificar/', procesar_identificacion),
+    
+    # Lo ponemos en 'api/rest/' para no colisionar con 'api/' (uxia_api)
+    path('api/rest/', include(router.urls)), 
+    
     path('api/', uxia_api.urls),
     path('', uxia_api.urls),
 ]

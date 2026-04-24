@@ -4,7 +4,8 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from .models import Intent, Expo
 from .services.ai_service import analizar_coche_con_ai
-from rest_framework import permissions
+from rest_framework import viewsets, permissions
+from .serializers import ExpoSerializer # Importas el archivo que acabas de crear
 
 
 @csrf_exempt
@@ -37,8 +38,9 @@ def procesar_identificacion(request):
     return JsonResponse({'success': False, 'error': 'Faltan datos'}, status=400)
 
 class ExpoViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated] # Solo gente logueada
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ExpoSerializer # Aquí le dices qué serializer usar
 
     def get_queryset(self):
-        # Aquí está la magia: filtra las exposiciones según el usuario logueado
-        return Expo.objects.filter(propietario=self.request.user)
+        # Filtra solo las expos del usuario logueado
+        return Expo.objects.filter(propietari=self.request.user)
