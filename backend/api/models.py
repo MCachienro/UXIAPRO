@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 class Etiqueta(models.Model):
     nom = models.CharField(max_length=50, unique=True)
@@ -25,6 +26,11 @@ class Expo(models.Model):
     
     data_creacio = models.DateTimeField(auto_now_add=True)
     data_actualitzacio = models.DateTimeField(auto_now=True)
+    propietari = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='expos'
+    )
 
     def __str__(self):
         return self.nom
@@ -56,7 +62,12 @@ class Imatge(models.Model):
         return f"Imatge de {self.item.nom}"
 
 class Intent(models.Model):
-    usuari = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    usuari = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )    
     expo = models.ForeignKey(Expo, on_delete=models.CASCADE)
     url_foto_enviada = models.ImageField(upload_to='intents/')
     resultat_identificacio = models.TextField(blank=True, null=True)

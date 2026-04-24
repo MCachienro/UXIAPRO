@@ -4,6 +4,8 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from .models import Intent, Expo
 from .services.ai_service import analizar_coche_con_ai
+from rest_framework import permissions
+
 
 @csrf_exempt
 def procesar_identificacion(request):
@@ -33,3 +35,10 @@ def procesar_identificacion(request):
         })
         
     return JsonResponse({'success': False, 'error': 'Faltan datos'}, status=400)
+
+class ExpoViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated] # Solo gente logueada
+
+    def get_queryset(self):
+        # Aquí está la magia: filtra las exposiciones según el usuario logueado
+        return Expo.objects.filter(propietario=self.request.user)
