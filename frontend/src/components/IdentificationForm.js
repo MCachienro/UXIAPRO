@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 export default function IdentificationForm({ selectedExpoId }) {
-  // --- Estados para Cámara e IA ---
+  // Estados esenciales
   const [idFile, setIdFile] = useState(null);
   const [aiResult, setAiResult] = useState(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
@@ -12,46 +12,57 @@ export default function IdentificationForm({ selectedExpoId }) {
   const [cameraError, setCameraError] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
   
+  // Refs para controlar el hardware
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
 
-  // --- Lógica de Cámara ---
+  // 1. Limpieza al desmontar el componente
   useEffect(() => {
-    return () => stopCamera();
+    return () => {
+      stopCamera();
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
   }, []);
 
-  const startCamera = async () => {
-    try {
-      setCameraError('');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-        audio: false,
-      });
-      streamRef.current = stream;
-      setCameraActive(true);
-      // El video empezará a reproducirse solo gracias a autoPlay
-      if (videoRef.current) videoRef.current.srcObject = stream;
-    } catch (err) {
-      setCameraError('No s\'ha pogut accedir a la càmera.');
+  // 2. LA CLAVE: Conectar el stream al elemento de video cuando se activa
+  useEffect(() => {
+    if (cameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
     }
-  };
+  }, [cameraActive]);
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
     setCameraActive(false);
   };
 
+  const startCamera = async () => {
+    try {
+      setCameraError('');
+      // Limpiamos estados previos
+      setAiResult(null);
+      
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
+
+      streamRef.current = stream;
+      setCameraActive(true);
+    } catch (error) {
+      setCameraError('No s\'ha pogut accedir a la càmera. Assegura\'t de donar permisos.');
+      setCameraActive(false);
+    }
+  };
+
   const capturePhoto = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas) return;
-
-    // Validación crítica para evitar errores de 0x0
-    if (video.videoWidth === 0 || video.videoHeight === 0) return;
+    if (!video || !canvas || video.videoWidth === 0) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -60,14 +71,13 @@ export default function IdentificationForm({ selectedExpoId }) {
 
     canvas.toBlob((blob) => {
       if (!blob) return;
-      const file = new File([blob], "identificacio.jpg", { type: "image/jpeg" });
+      const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
       setIdFile(file);
       setPreviewUrl(URL.createObjectURL(blob));
       stopCamera();
-    }, 'image/jpeg');
+    }, 'image/jpeg', 0.9);
   };
 
-  // --- Lógica de IA ---
   const handleIdentify = async () => {
     if (!idFile || !selectedExpoId) return;
     setIsIdentifying(true);
@@ -76,62 +86,56 @@ export default function IdentificationForm({ selectedExpoId }) {
     formData.append('expo_id', selectedExpoId);
     
     try {
-      const res = await axios.post(`${API_BASE_URL}/identificar/`, formData);
-      setAiResult(res.data.mensaje);
+      const response = await axios.post(`${API_BASE_URL}/identificar/`, formData);
+      setAiResult(response.data.mensaje);
     } catch (e) {
-      setAiResult("Error en la identificació.");
+      setAiResult("Error al processar la identificació.");
     } finally {
       setIsIdentifying(false);
     }
   };
 
   return (
-    <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-      <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Identificació d'objectes</h2>
-      
+    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Identificació</h2>
+
       {cameraActive ? (
-        <div className="relative rounded-xl overflow-hidden bg-black">
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            playsInline 
-            muted
-            className="w-full h-64 object-cover" 
-          />
+        <div className="mt-3 rounded-xl bg-black overflow-hidden relative">
+          <video ref={videoRef} autoPlay playsInline muted className="w-full h-64 object-cover" />
           <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-            <button onClick={capturePhoto} className="bg-white text-slate-900 px-6 py-2 rounded-full font-bold shadow-xl">Capturar</button>
-            <button onClick={stopCamera} className="bg-red-500 text-white p-2 rounded-full shadow-xl">✕</button>
+            <button onClick={capturePhoto} className="bg-white px-6 py-2 rounded-full font-bold">Capturar</button>
+            <button onClick={stopCamera} className="bg-red-500 text-white px-4 py-2 rounded-full font-bold">✕</button>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {previewUrl && <img src={previewUrl} className="w-full h-48 object-cover rounded-xl border" alt="Preview" />}
-          <div className="flex gap-2">
-            <button 
-              onClick={startCamera} 
-              className="flex-1 border-2 border-dashed border-slate-200 py-6 rounded-xl text-slate-400 font-bold hover:bg-slate-50 transition"
-            >
-              {previewUrl ? 'Canviar foto' : 'Obrir càmera'}
+        <div className="mt-3 flex flex-col gap-3">
+          {cameraError && <p className="text-sm text-red-600 font-bold">{cameraError}</p>}
+          
+          {previewUrl ? (
+            <>
+              <img src={previewUrl} className="w-full h-48 object-cover rounded-xl" alt="Preview" />
+              <div className="flex gap-2">
+                <button onClick={startCamera} className="flex-1 border p-2 rounded-lg font-bold">Repetir</button>
+                <button onClick={handleIdentify} disabled={isIdentifying} className="flex-1 bg-emerald-600 text-white p-2 rounded-lg font-bold">
+                  {isIdentifying ? 'Analitzant...' : 'Enviar'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button onClick={startCamera} className="w-full border-2 border-dashed py-6 rounded-xl text-slate-400 font-bold hover:bg-slate-50">
+              Obrir càmera
             </button>
-            {previewUrl && (
-              <button 
-                onClick={handleIdentify} 
-                disabled={isIdentifying}
-                className="flex-1 bg-emerald-600 text-white rounded-xl font-bold"
-              >
-                {isIdentifying ? 'Analitzant...' : 'Identificar'}
-              </button>
-            )}
-          </div>
+          )}
         </div>
       )}
+
       <canvas ref={canvasRef} className="hidden" />
+
       {aiResult && (
-        <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+        <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
           <p className="text-sm text-slate-700">{aiResult}</p>
         </div>
       )}
-      {cameraError && <p className="text-red-500 mt-2 text-sm">{cameraError}</p>}
     </section>
   );
 }
