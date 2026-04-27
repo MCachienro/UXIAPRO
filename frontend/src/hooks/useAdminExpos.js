@@ -10,7 +10,7 @@ export const useAdminExpos = (isUserLogged) => {
     if (!isUserLogged) return;
 
     // Llamamos a la ruta protegida que configuramos en Django
-    api.get('/api/rest/expos/')
+    api.get('/api/rest/expos')
       .then(response => {
         setAdminExpos(response.data);
         setLoading(false);
