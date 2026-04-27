@@ -22,7 +22,7 @@ const [searchQuery, setSearchQuery] = useState('');
 
   // --- Helpers de Renderizado ---
   const renderContent = () => {
-    if (user) return <AdminDashboard user={user} allExpos={expos} onLogout={() => setUser(null)} />;
+    if (user) return <AdminDashboard user={user} onLogout={() => setUser(null)} />;
     if (isLoginOpen) return <LoginForm onLoginSuccess={(u) => { setUser(u); setIsLoginOpen(false); }} />;
 
   return (
