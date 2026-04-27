@@ -29,6 +29,13 @@ router.register(r'expos', ExpoViewSet, basename='expo')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Production compatibility when Apache mounts Django under /api via WSGIScriptAlias.
+    # In that setup /api is stripped before Django routing.
+    path('auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair_mounted'),
+    path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh_mounted'),
+    path('auth/me/', current_user, name='current_user_mounted'),
+    path('rest/', include(router.urls)),
+
     path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/me/', current_user, name='current_user'),
