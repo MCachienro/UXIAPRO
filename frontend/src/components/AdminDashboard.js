@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAdminExpos } from '../hooks/useAdminExpos';
 import { useMemo, useState } from 'react';
+import { ExpoDetailView } from './ExpoDetailView';
 
 const PREVIEW_ITEMS_LIMIT = 3;
 
@@ -15,6 +16,7 @@ const normalizeImageUrl = (url) => {
 const AdminDashboard = ({ user, onLogout }) => {
   const { adminExpos, loading } = useAdminExpos(!!user);
   const [activeView, setActiveView] = useState('home');
+  const [selectedExpo, setSelectedExpo] = useState(null);
 
   const totalItems = useMemo(
     () => adminExpos.reduce((sum, expo) => sum + (expo.items?.length || 0), 0),
@@ -22,6 +24,17 @@ const AdminDashboard = ({ user, onLogout }) => {
   );
 
   if (loading) return <div>Carregant...</div>;
+
+  // --- VISTA DETALLE (Se usa el componente nuevo) ---
+  if (selectedExpo) {
+    return (
+      <ExpoDetailView 
+        expo={selectedExpo} 
+        onBack={() => setSelectedExpo(null)} 
+        normalizeImageUrl={normalizeImageUrl} // Pasamos la función helper
+      />
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 animate-in fade-in">
@@ -76,7 +89,7 @@ const AdminDashboard = ({ user, onLogout }) => {
             const previewItems = (expo.items || []).slice(0, PREVIEW_ITEMS_LIMIT);
 
             return (
-              <article key={expo.id} className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+              <article key={expo.id} className="rounded-xl border border-slate-200 bg-slate-50 p-5" onClick={() => setSelectedExpo(expo)}>
                 <div className="flex flex-wrap items-center gap-3">
                   <h4 className="text-lg font-black text-slate-800">{expo.nom}</h4>
                   <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
