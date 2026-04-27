@@ -7,6 +7,8 @@ import ExpoCarousel from './components/ExpoCarousel';
 import ItemDetailModal from './components/ItemDetailModal';
 import Footer from './components/Footer';
 import IdentificationForm from './components/IdentificationForm';
+import CookieBanner from './components/ui/CookieBanner';
+import { useUserTracking } from './hooks/useUserTracking';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,6 +19,15 @@ function App() {
   const { expos } = useExpos('');
   const { results, status } = useSearchResults(searchQuery);
   const { items, itemsStatus } = useExpoItems(selectedExpoId);
+  const {
+    consent,
+    hasConsent,
+    visitorId,
+    intents,
+    acceptCookies,
+    rejectCookies,
+    saveIntent,
+  } = useUserTracking();
 
   const selectedExpo = expos.find((e) => String(e.id) === selectedExpoId);
 
@@ -59,7 +70,25 @@ function App() {
           onSelectItem={handleSelectItem}
         />
 
-        {selectedExpoId && <IdentificationForm selectedExpoId={selectedExpoId} />}
+        {consent === null && (
+          <CookieBanner onAccept={acceptCookies} onReject={rejectCookies} />
+        )}
+
+        {hasConsent && (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3 text-xs text-slate-600">
+            <p><span className="font-bold">Visitor ID:</span> {visitorId}</p>
+            <p className="mt-1"><span className="font-bold">Intents locals guardats:</span> {intents.length}</p>
+          </div>
+        )}
+
+        {selectedExpoId && (
+          <IdentificationForm
+            selectedExpoId={selectedExpoId}
+            selectedExpoName={selectedExpo?.nom || ''}
+            visitorId={visitorId}
+            onIntentTracked={saveIntent}
+          />
+        )}
 
         {itemsStatus === 'ok' && items.length > 0 && (
           <ExpoCarousel 

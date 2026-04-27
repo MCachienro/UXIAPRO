@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
-export default function IdentificationForm({ selectedExpoId }) {
+export default function IdentificationForm({ selectedExpoId, selectedExpoName, visitorId, onIntentTracked }) {
   const [idFile, setIdFile] = useState(null);
   const [aiResult, setAiResult] = useState(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
@@ -13,25 +13,6 @@ export default function IdentificationForm({ selectedExpoId }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [photo, setPhoto] = useState(null); // La foto capturada
-  const [result, setResult] = useState(null); // Resultado de la IA
-  const fileInputRef = useRef(null);
-
-  // ESTA ES LA CLAVE: Limpiar todo antes de abrir la cámara
-  const handleStartCapture = () => {
-    setPhoto(null);
-    setResult(null);
-    setIsCameraOpen(true);
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPhoto(URL.createObjectURL(file));
-      setIsCameraOpen(false); // Cerramos "modo cámara" una vez tomada
-    }
-  };
 
   useEffect(() => {
     return () => {
@@ -149,7 +130,20 @@ export default function IdentificationForm({ selectedExpoId }) {
     
     try {
       const response = await axios.post(`${API_BASE_URL}/identificar/`, formData);
-      setAiResult(response.data.mensaje);
+      const message = response.data.mensaje || 'Sense resultat';
+      setAiResult(message);
+
+      if (typeof onIntentTracked === 'function') {
+        onIntentTracked({
+          visitorId,
+          expoId: Number(selectedExpoId),
+          expoName: selectedExpoName || null,
+          intentId: response.data.intent_id || null,
+          itemId: response.data.item_id || null,
+          imageUrl: response.data.photo_url || null,
+          resultText: message,
+        });
+      }
     } catch (e) {
       setAiResult("Error al processar.");
     } finally {
