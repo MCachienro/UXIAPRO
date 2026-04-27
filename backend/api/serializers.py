@@ -5,7 +5,7 @@ from .models import Expo, Item, Imatge
 class ImatgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Imatge
-        fields = ['url_imatge']
+        fields = ['id', 'url_imatge', 'tipus']
 
 class ItemSerializer(serializers.ModelSerializer):
     # Esto te permite ver la imagen dentro del ítem
@@ -13,7 +13,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = ['id', 'nom', 'descripcio', 'imatge_destacada']
+        fields = ['id', 'nom', 'descripcio', 'imatge_destacada', "imatges"]
 
 class ExpoSerializer(serializers.ModelSerializer):
     # Esto hace "la magia": incluye la lista de ítems dentro de la expo
