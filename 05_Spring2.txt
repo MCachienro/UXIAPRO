@@ -1,0 +1,275 @@
+SPRINT 2 - UXIA WEB (ORGANIZACIÓN COMPLETA)
+
+---
+
+12. MOTXILLA #2
+
+---
+
+Descripción:
+Revisión general del proyecto. Ajustar estructura, corregir errores del Sprint 1 y preparar base para Sprint 2.
+
+Componentes:
+
+* Ninguno específico
+
+Acciones:
+
+* Limpiar App.js (dejar solo rutas)
+* Crear estructura de carpetas
+* Revisar APIs existentes
+
+---
+
+13. LOGIN + ADMIN DASHBOARD
+
+---
+
+Descripción:
+Sistema de autenticación desde React + panel de admin.
+
+Componentes:
+
+* pages/Login.jsx
+* pages/Dashboard.jsx
+* components/ui/Button.jsx
+* components/layout/AdminLayout.jsx
+* hooks/useAuth.js
+
+Subcomponentes:
+
+* Navbar.jsx (nombre + logout)
+
+API:
+
+* POST /login
+* GET /me
+
+---
+
+14. EXPO LIST VIEW
+
+---
+
+Descripción:
+Listado de expos del usuario. Aqui se mostrarán las expos creadas por el usuario en formato de lista.
+
+Componentes:
+
+* pages/ExpoListPage.jsx
+* components/expo/ExpoList.jsx
+* components/expo/ExpoCard.jsx
+
+Subcomponentes:
+
+* ExpoPreviewItems.jsx (mini items dentro de la expo)
+
+API:
+
+* GET /expos
+
+---
+
+15. EXPO DETAIL VIEW
+
+---
+
+Descripción:
+Vista detallada de una expo con grid de items.
+
+Componentes:
+
+* pages/ExpoDetailPage.jsx
+* components/item/ItemGrid.jsx
+* components/item/ItemCard.jsx
+
+Subcomponentes:
+
+* ItemImagesPreview.jsx
+
+API:
+
+* GET /expos/:id
+
+---
+
+16. NUEVO ITEM
+
+---
+
+Descripción:
+Formulario para crear items.
+
+Componentes:
+
+* components/item/ItemForm.jsx
+* components/ui/Input.jsx
+* components/ui/Modal.jsx
+
+Subcomponentes:
+
+* TagSelector.jsx
+
+API:
+
+* POST /items
+
+---
+
+17. EDIT EXPO
+
+---
+
+Descripción:
+Editar datos de la expo mediante modal.
+
+Componentes:
+
+* components/expo/ExpoEditModal.jsx
+* components/ui/Modal.jsx
+
+API:
+
+* PUT /expos/:id
+
+---
+
+18. EDIT ITEM
+
+---
+
+Descripción:
+Editar item existente.
+
+Componentes:
+
+* components/item/ItemEditForm.jsx
+* components/ui/Modal.jsx
+
+API:
+
+* PUT /items/:id
+
+---
+
+19. MULTIPLE IMAGE UPLOAD
+
+---
+
+Descripción:
+Subida múltiple de imágenes + selección de destacada.
+
+Componentes:
+
+* components/item/ImageUploader.jsx
+* components/item/ImagePreview.jsx
+
+Subcomponentes:
+
+* FeaturedImageSelector.jsx
+
+API:
+
+* POST /upload
+* POST /items/:id/images
+
+IMPORTANTE:
+
+* Usar FormData
+* input type="file" multiple
+
+---
+
+20. GOOGLE ANALYTICS ( Afegir Google Analytics i Google Search Console. Tots els participants del grup tindran accés a les dades. )
+
+---
+
+Descripción:
+Integración básica.
+
+Componentes:
+
+* Ninguno (script global)
+
+---
+
+21. DARK MODE
+
+---
+
+Descripción:
+Modo oscuro automático/manual.
+
+Componentes:
+
+* hooks/useTheme.js
+* components/ui/ThemeToggle.jsx
+
+---
+
+22. BUSCADOR POLIMÓRFICO
+
+---
+
+Descripción:
+Buscar Expos + Items.
+
+Componentes:
+
+* components/search/SearchBar.jsx
+* components/search/SearchResults.jsx
+
+Subcomponentes:
+
+* SearchExpoItem.jsx
+* SearchItemItem.jsx
+
+API:
+
+* GET /search?q=
+
+---
+
+23. TRACKING USUARIO (COOKIES)
+
+---
+
+Descripción:
+Identificar usuario sin login.
+
+Componentes:
+
+* hooks/useUserTracking.js
+* components/ui/CookieBanner.jsx
+
+---
+
+24. HISTORIAL
+
+---
+
+Descripción:
+Mostrar intents del usuario.
+
+Componentes:
+
+* pages/HistoryPage.jsx
+* components/history/HistoryList.jsx
+* components/history/HistoryItem.jsx
+
+API:
+
+* GET /intents
+
+---
+
+## NOTAS IMPORTANTES
+
+* App.jsx SOLO rutas
+* Separar lógica en hooks
+* APIs en carpeta /api
+* Componentes reutilizables SIEMPRE
+
+---
+
+## FIN

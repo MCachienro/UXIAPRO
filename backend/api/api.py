@@ -36,6 +36,16 @@ class ItemDetailOut(ItemOut):
     imatges_publiques: List[str]
 
 
+class SearchResultOut(Schema):
+    tipus: str
+    id: int
+    nom: str
+    descripcio: Optional[str] = None
+    expo_id: Optional[int] = None
+    expo_nom: Optional[str] = None
+    imatge_destacada_url: Optional[str] = None
+
+
 api = NinjaAPI(title="UXIA API")
 
 
@@ -49,6 +59,48 @@ def search_expos(request, q: Optional[str] = None):
     if q:
         return Expo.objects.filter(nom__icontains=q).order_by("id")
     return Expo.objects.all().order_by("id")
+
+
+@api.get("/search", response=List[SearchResultOut], tags=["Search"])
+def polymorphic_search(request, q: Optional[str] = None):
+    query = (q or "").strip()
+    if len(query) < 3:
+        return []
+
+    expos = Expo.objects.filter(nom__icontains=query).order_by("id")
+    items = (
+        Item.objects.select_related("expo", "imatge_destacada")
+        .filter(nom__icontains=query)
+        .order_by("id")
+    )
+
+    results = [
+        {
+            "tipus": "EXPO",
+            "id": expo.id,
+            "nom": expo.nom,
+            "descripcio": expo.descripcio,
+        }
+        for expo in expos
+    ]
+
+    results.extend(
+        {
+            "tipus": "ITEM",
+            "id": item.id,
+            "nom": item.nom,
+            "descripcio": item.descripcio,
+            "expo_id": item.expo_id,
+            "expo_nom": item.expo.nom,
+            "imatge_destacada_url": _build_file_url(
+                request,
+                item.imatge_destacada.url_imatge if item.imatge_destacada else None,
+            ),
+        }
+        for item in items
+    )
+
+    return results
 
 
 @api.get("/expos/{expo_id}", response=ExpoOut, tags=["Expos"])
