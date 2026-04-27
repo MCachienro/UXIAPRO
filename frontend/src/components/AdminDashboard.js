@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAdminExpos } from '../hooks/useAdminExpos';
 import { useMemo, useState } from 'react';
-import { ExpoDetailView } from '../components/ExpoDetailView';
+import  ExpoDetailView  from '../components/ExpoDetailView';
 
 const PREVIEW_ITEMS_LIMIT = 3;
 
