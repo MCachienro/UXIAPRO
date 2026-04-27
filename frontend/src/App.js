@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useExpos } from './hooks/useExpos';
 import { useExpoItems } from './hooks/useExpoItems';
 import ExpoSearch from './components/ExpoSearch';
@@ -10,7 +10,25 @@ import AdminDashboard from './components/AdminDashboard';
 import LoginForm from './components/LoginForm';
 
 function App() {
-const [searchQuery, setSearchQuery] = useState('');
+  // --- 1. LÓGICA DE DARK MODE ---
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
+  // --- 2. ESTADOS DE NAVEGACIÓN Y BÚSQUEDA ---
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedExpoId, setSelectedExpoId] = useState('');
   const [detailItemId, setDetailItemId] = useState(null);
   const [user, setUser] = useState(null);
@@ -66,6 +84,13 @@ const [searchQuery, setSearchQuery] = useState('');
            <h1 onClick={() => {setIsLoginOpen(false); setSelectedExpoId('');}} className="cursor-pointer text-4xl font-black uppercase tracking-tighter text-slate-800">
              UXIA <span className="text-indigo-600">Expos</span>
            </h1>
+            {/* BOTÓN DARK MODE */}
+            <button 
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-xl"
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
            {/* Botón Admin */}
            {!user && (
              <button onClick={() => setIsLoginOpen(!isLoginOpen)} className="text-sm font-bold text-slate-600 hover:text-indigo-600">
