@@ -72,6 +72,13 @@ function App() {
     setDetailItemId(null);
   };
 
+  const handleSelectItem = (item) => {
+    setSearchQuery(item.nom);
+    setSelectedExpoId(String(item.expo_id));
+    setActiveItemId(item.id);
+    setDetailItemId(item.id);
+  };
+
   // --- 5. RENDERIZADO CONDICIONAL PRINCIPAL ---
   const renderContent = () => {
     // A. Vista Admin
@@ -100,6 +107,7 @@ function App() {
           results={results}
           status={status}
           onSelectExpo={handleSelectExpo}
+          onSelectItem={handleSelectItem}
         />
 
         {selectedExpoId && (
