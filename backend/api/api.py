@@ -64,7 +64,7 @@ def search_expos(request, q: Optional[str] = None):
 @api.get("/search", response=List[SearchResultOut], tags=["Search"])
 def polymorphic_search(request, q: Optional[str] = None):
     query = (q or "").strip()
-    if not query:
+    if len(query) < 3:
         return []
 
     expos = Expo.objects.filter(nom__icontains=query).order_by("id")

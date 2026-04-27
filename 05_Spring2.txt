@@ -180,7 +180,7 @@ IMPORTANTE:
 
 ---
 
-20. GOOGLE ANALYTICS
+20. GOOGLE ANALYTICS ( Afegir Google Analytics i Google Search Console. Tots els participants del grup tindran accés a les dades. )
 
 ---
 
