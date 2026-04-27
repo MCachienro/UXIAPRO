@@ -113,7 +113,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, v
 
       {cameraActive ? (
         <div className="mt-3 rounded-xl bg-black overflow-hidden relative">
-          <video ref={videoRef} autoPlay playsInline muted className="w-full h-64 object-cover" />
+          <video ref={videoRef} autoPlay playsInline muted className="w-full aspect-video object-cover" />
           <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
             <button onClick={capturePhoto} className="bg-white px-6 py-2 rounded-full font-bold">Capturar</button>
             <button onClick={stopCamera} className="bg-red-500 text-white px-4 py-2 rounded-full font-bold">✕</button>
