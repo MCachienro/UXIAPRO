@@ -4,6 +4,7 @@ db.sqlite3
 node_modules/
 .env
 env/
+envBil/
 *.log
 01_Documentacio_General.txt
 02_Base_de_Dades.txt

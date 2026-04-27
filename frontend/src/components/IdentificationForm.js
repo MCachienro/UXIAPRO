@@ -10,42 +10,26 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, v
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
+  
+  // Refs para controlar el hardware
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
 
+  // 1. Limpieza al desmontar el componente
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
+      stopCamera();
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, []);
 
+  // 2. LA CLAVE: Conectar el stream al elemento de video cuando se activa
   useEffect(() => {
-    const attachStream = async () => {
-      if (!cameraActive || !videoRef.current || !streamRef.current) {
-        return;
-      }
+    if (cameraActive && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
-      try {
-        await videoRef.current.play();
-      } catch (_) {
-        setCameraError('La càmera s\'ha obert, pero el video no s\'ha pogut reproduir.');
-      }
-    };
-
-    attachStream();
+    }
   }, [cameraActive]);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -56,44 +40,20 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, v
   };
 
   const startCamera = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setCameraError('Càmera no detectada en aquest dispositiu.');
-      return;
-    }
-
-    if (!window.isSecureContext) {
-      setCameraError('La càmera requereix connexió segura (HTTPS).');
-      return;
-    }
-
     try {
       setCameraError('');
-      stopCamera();
-      let stream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
-          audio: false,
-        });
-      } catch (_) {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
-      }
+      // Limpiamos estados previos
+      setAiResult(null);
+      
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
 
       streamRef.current = stream;
       setCameraActive(true);
     } catch (error) {
-      if (error && error.name === 'NotFoundError') {
-        setCameraError('No s\'ha detectat cap càmera en aquest dispositiu.');
-      } else if (error && (error.name === 'NotAllowedError' || error.name === 'SecurityError')) {
-        setCameraError('Permís de càmera denegat. Activa\'l al navegador i torna-ho a provar.');
-      } else if (error && error.name === 'NotReadableError') {
-        setCameraError('La càmera està ocupada per una altra app o pestanya.');
-      } else {
-        setCameraError(`No s'ha pogut activar la càmera (${error?.name || 'Error'}).`);
-      }
+      setCameraError('No s\'ha pogut accedir a la càmera. Assegura\'t de donar permisos.');
       setCameraActive(false);
     }
   };
@@ -101,21 +61,17 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, v
   const capturePhoto = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
-      return;
-    }
+    if (!video || !canvas || video.videoWidth === 0) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     canvas.toBlob((blob) => {
-      if (!blob) {
-        return;
-      }
-      const photoFile = new File([blob], `captura-${Date.now()}.jpg`, { type: 'image/jpeg' });
-      setIdFile(photoFile);
+      if (!blob) return;
+      const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
+      setIdFile(file);
       setPreviewUrl(URL.createObjectURL(blob));
       stopCamera();
     }, 'image/jpeg', 0.9);
@@ -145,85 +101,51 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, v
         });
       }
     } catch (e) {
-      setAiResult("Error al processar.");
+      setAiResult("Error al processar la identificació.");
     } finally {
       setIsIdentifying(false);
     }
   };
 
   return (
-    <section className="mt-6 rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-[0_14px_35px_rgba(15,23,42,0.08)]">
-      <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Identificació IDEM</h2>
+    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Identificació</h2>
 
-      {/* 1. VISTA DE CÁMARA ACTIVA */}
       {cameraActive ? (
-        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <video ref={videoRef} autoPlay playsInline muted className="w-full rounded-lg" />
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={capturePhoto}
-              type="button"
-              className="rounded-lg bg-emerald-600 px-4 py-2 font-bold text-white transition hover:bg-emerald-700"
-            >
-              Fer foto
-            </button>
-            <button
-              onClick={stopCamera}
-              type="button"
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
-            >
-              Tancar càmera
-            </button>
+        <div className="mt-3 rounded-xl bg-black overflow-hidden relative">
+          <video ref={videoRef} autoPlay playsInline muted className="w-full h-64 object-cover" />
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+            <button onClick={capturePhoto} className="bg-white px-6 py-2 rounded-full font-bold">Capturar</button>
+            <button onClick={stopCamera} className="bg-red-500 text-white px-4 py-2 rounded-full font-bold">✕</button>
           </div>
         </div>
       ) : (
-        /* 2. VISTA DE ESTADO IDLE / PREVISUALIZACIÓN (Cuando la cámara está cerrada) */
         <div className="mt-3 flex flex-col gap-3">
-          {cameraError && <p className="text-sm font-semibold text-red-700">{cameraError}</p>}
-
+          {cameraError && <p className="text-sm text-red-600 font-bold">{cameraError}</p>}
+          
           {previewUrl ? (
             <>
-              <img
-                src={previewUrl}
-                alt="Previsualitzacio captura"
-                className="max-h-64 w-full rounded-lg border border-slate-200 object-contain bg-slate-50"
-              />
+              <img src={previewUrl} className="w-full h-48 object-cover rounded-xl" alt="Preview" />
               <div className="flex gap-2">
-                <button
-                  onClick={startCamera}
-                  type="button"
-                  className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Fer una altra foto
-                </button>
-                <button
-                  onClick={handleIdentify}
-                  disabled={isIdentifying || !idFile}
-                  className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 font-bold text-white transition hover:bg-emerald-700 disabled:bg-slate-300"
-                >
-                  {isIdentifying ? 'Analitzant...' : 'Enviar foto'}
+                <button onClick={startCamera} className="flex-1 border p-2 rounded-lg font-bold">Repetir</button>
+                <button onClick={handleIdentify} disabled={isIdentifying} className="flex-1 bg-emerald-600 text-white p-2 rounded-lg font-bold">
+                  {isIdentifying ? 'Analitzant...' : 'Enviar'}
                 </button>
               </div>
             </>
           ) : (
-            <button
-              onClick={startCamera}
-              type="button"
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 transition hover:bg-slate-50"
-            >
+            <button onClick={startCamera} className="w-full border-2 border-dashed py-6 rounded-xl text-slate-400 font-bold hover:bg-slate-50">
               Obrir càmera
             </button>
           )}
         </div>
       )}
 
-      {/* Elementos ocultos o resultados */}
       <canvas ref={canvasRef} className="hidden" />
 
       {aiResult && (
-        <div className="mt-4 rounded-lg bg-slate-50 p-3 border border-slate-200">
-          <p className="text-xs font-bold text-slate-400 uppercase">Resultat de la IA:</p>
-          <p className="mt-1 text-sm text-slate-800">{aiResult}</p>
+        <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+          <p className="text-sm text-slate-700">{aiResult}</p>
         </div>
       )}
     </section>

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 class Etiqueta(models.Model):
     nom = models.CharField(max_length=50, unique=True)
@@ -17,6 +18,12 @@ class Expo(models.Model):
     nom = models.CharField(max_length=100)
     descripcio = models.TextField(blank=True, null=True)
     estat = models.CharField(max_length=20, choices=Estat.choices, default=Estat.INIT)
+    
+    # --- CAMBIO PARA EL DASHBOARD ---
+    # Relacionamos la Expo con un usuario (el admin/propietario)
+    propietari = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exposicions', null=True, blank=True)
+    # --------------------------------
+    
     data_creacio = models.DateTimeField(auto_now_add=True)
     data_actualitzacio = models.DateTimeField(auto_now=True)
 
@@ -43,20 +50,24 @@ class Imatge(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='imatges')
     url_imatge = models.ImageField(upload_to='imatges/')
     tipus = models.CharField(max_length=10, choices=Tipus.choices, default=Tipus.PUBLICA)
-    es_publica = models.BooleanField(default=True) # Campo del sprint 1, act 2
+    es_publica = models.BooleanField(default=True)
     data_pujada = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Imatge de {self.item.nom}"
 
 class Intent(models.Model):
-    usuari = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    usuari = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )    
     expo = models.ForeignKey(Expo, on_delete=models.CASCADE)
     url_foto_enviada = models.ImageField(upload_to='intents/')
     resultat_identificacio = models.TextField(blank=True, null=True)
-    item_identificat = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True, blank=True) # Campo del sprint 1, act 2
+    item_identificat = models.ForeignKey(Item, on_delete=models.SET_NULL, null=True, blank=True)
     data_intent = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Intent a {self.expo.nom} el {self.data_intent}"
-
