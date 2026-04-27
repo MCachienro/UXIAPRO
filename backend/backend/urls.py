@@ -19,8 +19,9 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include  # Añadimos 'include'
 from rest_framework.routers import DefaultRouter # Añadimos el router
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from api.api import api as uxia_api
-from api.views import procesar_identificacion, ExpoViewSet # Importamos ExpoViewSet
+from api.views import procesar_identificacion, ExpoViewSet, current_user # Importamos ExpoViewSet
 
 # 1. Configuramos el router para el ViewSet
 router = DefaultRouter()
@@ -28,6 +29,9 @@ router.register(r'expos', ExpoViewSet, basename='expo')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/me/', current_user, name='current_user'),
     path('api/identificar/', procesar_identificacion),
     path('identificar/', procesar_identificacion),
     

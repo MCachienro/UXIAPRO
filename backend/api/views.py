@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 from .models import Intent, Expo
 from .services.ai_service import analizar_coche_con_ai
 from rest_framework import viewsets, permissions
@@ -44,3 +46,18 @@ class ExpoViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Filtra solo las expos del usuario logueado
         return Expo.objects.filter(propietari=self.request.user)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def current_user(request):
+    user = request.user
+    return Response(
+        {
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+        }
+    )
