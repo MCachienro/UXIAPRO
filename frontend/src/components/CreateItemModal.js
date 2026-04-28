@@ -32,7 +32,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:8000/api/rest/items/', {
+            const response = await fetch('https://uxiaweb1.ieti.site/api/rest/items/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

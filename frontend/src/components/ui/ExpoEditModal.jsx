@@ -47,7 +47,7 @@ export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) 
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/rest/expos/${expo.id}/`,
+        `https://uxiaweb1.ieti.site/api/rest/expos/${expo.id}/`,
         {
           method: 'PUT',
           headers: {

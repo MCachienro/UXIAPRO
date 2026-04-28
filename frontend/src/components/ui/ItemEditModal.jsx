@@ -59,7 +59,7 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/rest/items/${item.id}/`,
+        `https://uxiaweb1.ieti.site/api/rest/items/${item.id}/`,
         {
           method: 'PUT',
           headers: {

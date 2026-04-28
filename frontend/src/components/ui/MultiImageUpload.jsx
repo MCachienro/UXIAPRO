@@ -42,7 +42,7 @@ export default function MultiImageUpload({
 
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/rest/items/${itemId}/upload_images/`,
+        `https://uxiaweb1.ieti.site/api/rest/items/${itemId}/upload_images/`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
@@ -77,7 +77,7 @@ export default function MultiImageUpload({
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/rest/items/${itemId}/set_featured_image/`,
+        `https://uxiaweb1.ieti.site/api/rest/items/${itemId}/set_featured_image/`,
         {
           method: 'PUT',
           headers: {
@@ -114,7 +114,7 @@ export default function MultiImageUpload({
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/rest/items/${itemId}/delete_image/?image_id=${imageId}`,
+        `https://uxiaweb1.ieti.site/api/rest/items/${itemId}/delete_image/?image_id=${imageId}`,
         {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
