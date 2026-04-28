@@ -11,7 +11,6 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
   const [cameraError, setCameraError] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewDataUrl, setPreviewDataUrl] = useState('');
-  const [isReviewing, setIsReviewing] = useState(false); // Nuevo estado
   
   // Refs para controlar el hardware
   const videoRef = useRef(null);
@@ -34,17 +33,18 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
   }, [cameraActive]);
 
   const stopCamera = () => {
+    // 1. Detener los tracks (esto ya lo hacías)
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
-    if (videoRef.current) videoRef.current.srcObject = null;
-    
-    setPreviewUrl(null);
-    setPreviewDataUrl('');
-    setIdFile(null);
-    setAiResult(null);
-    setIsReviewing(false); // <--- AÑADE ESTO
+
+    // 2. IMPORTANTE: Limpiar el elemento de video
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    // 3. Cambiar el estado
     setCameraActive(false);
   };
 
@@ -89,7 +89,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       };
       reader.readAsDataURL(blob);
 
-      setIsReviewing(true); // Activamos el modo revisión
+      stopCamera();
     }, 'image/jpeg', 0.9);
   };
 
@@ -145,7 +145,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
                 <img src={previewUrl} className="w-full max-h-[60vh] aspect-video object-contain bg-black" alt="Preview" />
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setIsReviewing(false)} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">Repetir</button>
+                <button onClick={startCamera} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">Repetir</button>
                 <button 
                   onClick={handleIdentify} 
                   disabled={isIdentifying} 
