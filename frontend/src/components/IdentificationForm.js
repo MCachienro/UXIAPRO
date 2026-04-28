@@ -11,6 +11,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
   const [cameraError, setCameraError] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewDataUrl, setPreviewDataUrl] = useState('');
+  const [isReviewing, setIsReviewing] = useState(false); // Nuevo estado
   
   // Refs para controlar el hardware
   const videoRef = useRef(null);
@@ -95,7 +96,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       };
       reader.readAsDataURL(blob);
 
-      stopCamera();
+      setIsReviewing(true); // Activamos el modo revisión
     }, 'image/jpeg', 0.9);
   };
 
@@ -133,7 +134,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
     <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-100">Identificació</h2>
 
-      {cameraActive ? (
+      {(cameraActive && !isReviewing) ? (
         <div className="relative mt-3 min-h-[320px] overflow-hidden rounded-xl bg-black aspect-video">
           <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
