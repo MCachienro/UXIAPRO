@@ -64,6 +64,8 @@ export default function MultiImageUpload({
         throw new Error(`Error ${response.status}: ${errText}`);
       }
 
+      const data = await response.json();
+
       setPreviews([]); 
       const newImages = [...images, ...data.images];
       setImages(newImages);
