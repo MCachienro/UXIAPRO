@@ -23,15 +23,6 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
                 }
             }
 
-            // Logica de actualización de estado (Si hay imagenes)
-            if (files && files.length > 0) {
-                await fetch(`http://127.0.0.1:8000/api/expos/${expoId}/`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json'},
-                    body: JSON.stringify({ estat: "ACTUALITZABLE" }),
-                });
-            }
-
             // Crear el item
             await fetch('http://127.0.0.1:8000/api/items', {
                 method: 'POST',
