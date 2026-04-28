@@ -10,6 +10,7 @@ class ImatgeSerializer(serializers.ModelSerializer):
 class ItemSerializer(serializers.ModelSerializer):
     # Esto te permite ver la imagen dentro del ítem
     imatge_destacada = ImatgeSerializer(read_only=True)
+    imatges = ImatgeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Item
