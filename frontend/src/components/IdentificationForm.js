@@ -33,21 +33,22 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
   }, [cameraActive]);
 
   const stopCamera = () => {
-    // 1. Detener los tracks (esto ya lo hacías)
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
-
-    // 2. IMPORTANTE: Limpiar el elemento de video
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-
-    setPreviewUrl('');
-
-    // 3. Cambiar el estado
     setCameraActive(false);
+  };
+
+  const resetCamera = () => {
+    stopCamera(); // Primero apaga el hardware
+    setPreviewUrl(''); // Luego borra la foto
+    setPreviewDataUrl('');
+    setIdFile(null);
+    setAiResult(null);
   };
 
   const startCamera = async () => {
@@ -134,7 +135,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
           <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
             <button onClick={capturePhoto} className="rounded-full bg-white px-6 py-2 font-bold shadow-lg dark:bg-slate-100">Capturar</button>
-            <button onClick={stopCamera} className="rounded-full bg-red-500 px-4 py-2 font-bold text-white shadow-lg">✕</button>
+            <button onClick={resetCamera} className="rounded-full bg-red-500 px-4 py-2 font-bold text-white shadow-lg">✕</button>
           </div>
         </div>
       ) : (
