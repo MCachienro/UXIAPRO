@@ -3,13 +3,14 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
-export default function IdentificationForm({ selectedExpoId, selectedExpoName, visitorId, onIntentTracked }) {
+export default function IdentificationForm({ selectedExpoId, selectedExpoName, onIntentTracked }) {
   const [idFile, setIdFile] = useState(null);
   const [aiResult, setAiResult] = useState(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
+  const [previewDataUrl, setPreviewDataUrl] = useState('');
   
   // Refs para controlar el hardware
   const videoRef = useRef(null);
@@ -22,7 +23,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, v
       stopCamera();
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-  }, []);
+  }, [previewUrl]);
 
   // 2. LA CLAVE: Conectar el stream al elemento de video cuando se activa
   useEffect(() => {
@@ -73,6 +74,13 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, v
       const file = new File([blob], "captura.jpg", { type: "image/jpeg" });
       setIdFile(file);
       setPreviewUrl(URL.createObjectURL(blob));
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewDataUrl(typeof reader.result === 'string' ? reader.result : '');
+      };
+      reader.readAsDataURL(blob);
+
       stopCamera();
     }, 'image/jpeg', 0.9);
   };
@@ -91,13 +99,13 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, v
 
       if (typeof onIntentTracked === 'function') {
         onIntentTracked({
-          visitorId,
           expoId: Number(selectedExpoId),
           expoName: selectedExpoName || null,
           intentId: response.data.intent_id || null,
           itemId: response.data.item_id || null,
-          imageUrl: response.data.photo_url || null,
-          resultText: message,
+          imageDataUrl: previewDataUrl || null,
+          photoUrl: response.data.photo_url || null,
+          responseText: message,
         });
       }
     } catch (e) {

@@ -12,6 +12,7 @@ import IdentificationForm from './components/IdentificationForm';
 import AdminDashboard from './components/AdminDashboard';
 import LoginForm from './components/LoginForm';
 import CookieBanner from './components/ui/CookieBanner';
+import HistoryModal from './components/ui/HistoryModal';
 
 function App() {
   // --- 1. LÓGICA DE DARK MODE ---
@@ -45,13 +46,14 @@ function App() {
   const [activeItemId, setActiveItemId] = useState(null);
   const [user, setUser] = useState(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // --- 3. HOOKS ---
   const { expos } = useExpos('');
   const { results, status } = useSearchResults(searchQuery);
   const { items, itemsStatus } = useExpoItems(selectedExpoId);
   const {
-    consent, hasConsent, visitorId, intents, 
+    consent, intents, 
     acceptCookies, rejectCookies, saveIntent,
   } = useUserTracking();
 
@@ -116,7 +118,6 @@ function App() {
             <IdentificationForm 
               selectedExpoId={selectedExpoId}
               selectedExpoName={selectedExpo?.nom || ''}
-              visitorId={visitorId}
               onIntentTracked={saveIntent}
             />
 
@@ -156,6 +157,15 @@ function App() {
              >
                {darkMode ? '☀️' : '🌙'}
              </button>
+            <button
+              type="button"
+              onClick={() => setIsHistoryOpen(true)}
+              className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
+              aria-label="Obrir historial"
+              title="Historial"
+            >
+              🕒
+            </button>
              {!user && (
                <button onClick={() => setIsLoginOpen(!isLoginOpen)} className="text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600">
                  {isLoginOpen ? 'Tornar al Web' : 'Login Admin'}
@@ -168,16 +178,16 @@ function App() {
 
         {/* Banner de cookies fuera de renderContent para que siempre sea accesible */}
         {consent === null && <CookieBanner onAccept={acceptCookies} onReject={rejectCookies} />}
-        
-        {hasConsent && (
-          <div className="mt-8 p-3 rounded-xl border border-slate-200 bg-white/50 dark:bg-slate-800/50 text-xs text-slate-600 dark:text-slate-400">
-             <p><span className="font-bold">Visitor ID:</span> {visitorId}</p>
-          </div>
-        )}
       </main>
 
       <Footer />
       {detailItemId && <ItemDetailModal itemId={detailItemId} onClose={() => setDetailItemId(null)} />}
+      {isHistoryOpen && (
+        <HistoryModal
+          intents={intents}
+          onClose={() => setIsHistoryOpen(false)}
+        />
+      )}
     </div>
   );
 }

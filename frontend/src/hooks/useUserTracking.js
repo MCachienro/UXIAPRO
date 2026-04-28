@@ -14,6 +14,13 @@ const safeParse = (rawValue, fallback) => {
   }
 };
 
+const normalizeIntent = (intent) => ({
+  ...intent,
+  imageDataUrl: intent.imageDataUrl || intent.photoDataUrl || intent.imageUrl || null,
+  responseText: intent.responseText || intent.resultText || intent.mensaje || '',
+  photoUrl: intent.photoUrl || intent.backendPhotoUrl || intent.imageUrl || null,
+});
+
 const buildVisitorId = () => {
   if (window.crypto && typeof window.crypto.randomUUID === 'function') {
     return window.crypto.randomUUID();
@@ -24,7 +31,7 @@ const buildVisitorId = () => {
 export const useUserTracking = () => {
   const [consent, setConsent] = useState(() => localStorage.getItem(CONSENT_KEY));
   const [user, setUser] = useState(() => safeParse(localStorage.getItem(USER_KEY), null));
-  const [intents, setIntents] = useState(() => safeParse(localStorage.getItem(INTENTS_KEY), []));
+  const [intents, setIntents] = useState(() => safeParse(localStorage.getItem(INTENTS_KEY), []).map(normalizeIntent));
 
   useEffect(() => {
     if (consent !== 'accepted') {
@@ -59,10 +66,10 @@ export const useUserTracking = () => {
       return;
     }
 
-    const intent = {
+    const intent = normalizeIntent({
       ...intentPayload,
       trackedAt: new Date().toISOString(),
-    };
+    });
 
     setIntents((previous) => {
       const next = [intent, ...previous].slice(0, MAX_INTENTS);
