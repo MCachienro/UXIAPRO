@@ -22,12 +22,6 @@ function App() {
   });
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e) => {
-      if (!localStorage.getItem('theme')) setDarkMode(e.matches);
-    };
-    mediaQuery.addEventListener('change', handleChange);
-
     if (darkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
@@ -35,84 +29,84 @@ function App() {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
-    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [darkMode]);
 
-  // --- 2. ESTADOS DE NAVEGACIÓN Y BÚSQUEDA ---
+  // --- 2. ESTADO DE USUARIO ---
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('admin_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  // --- 3. ESTADOS DE NAVEGACIÓN Y BÚSQUEDA ---
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedExpoId, setSelectedExpoId] = useState('');
   const [detailItemId, setDetailItemId] = useState(null);
   const [activeItemId, setActiveItemId] = useState(null);
-  const [user, setUser] = useState(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-  // --- 3. HOOKS ---
+  // --- 4. HOOKS ---
   const { expos } = useExpos('');
   const { results, status } = useSearchResults(searchQuery);
   const { items, itemsStatus } = useExpoItems(selectedExpoId);
   const {
-    consent, hasConsent, visitorId, intents, 
+    consent, hasConsent, visitorId, 
     acceptCookies, rejectCookies, saveIntent,
   } = useUserTracking();
 
   const selectedExpo = expos.find((e) => String(e.id) === selectedExpoId);
 
-  // --- 4. HANDLERS ---
+  // --- 5. HANDLERS ---
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    localStorage.setItem('admin_user', JSON.stringify(userData));
+    setIsLoginOpen(false);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('admin_user');
+    localStorage.removeItem('token'); // TOKEN JWT
+    setIsLoginOpen(false);
+  };
+
   const handleSelectExpo = (expo) => {
     setSearchQuery(expo.nom);
     setSelectedExpoId(String(expo.id));
-    setActiveItemId(null);
-    setDetailItemId(null);
   };
 
-  const handleSearchChange = (value) => {
-    setSearchQuery(value);
-    setSelectedExpoId('');
-    setActiveItemId(null);
-    setDetailItemId(null);
-  };
-
-  const handleSelectItem = (item) => {
-    setSearchQuery(item.nom);
-    setSelectedExpoId(String(item.expo_id));
-    setActiveItemId(item.id);
-    setDetailItemId(item.id);
-  };
-
-  // --- 5. RENDERIZADO CONDICIONAL PRINCIPAL ---
+  // --- 6. RENDERIZADO ---
   const renderContent = () => {
-    // A. Vista Admin
     if (user) {
+      return <AdminDashboard user={user} onLogout={handleLogout} />;
+    }
+
+    if (isLoginOpen) {
       return (
-        <AdminDashboard
-          user={user}
-          onLogout={() => { localStorage.removeItem('token'); setUser(null); }}
-        />
+        <div className="max-w-md mx-auto py-10">
+          <LoginForm onLoginSuccess={handleLoginSuccess} />
+        </div>
       );
     }
 
-    // B. Vista Login
-    if (isLoginOpen) {
-      return <LoginForm onLoginSuccess={(u) => { setUser(u); setIsLoginOpen(false); }} />;
-    }
-
-    // C. Vista Pública
     return (
       <div className="space-y-8 animate-in fade-in duration-500">
         <ExpoSearch 
           searchQuery={searchQuery}
-          setSearchQuery={handleSearchChange}
+          setSearchQuery={(v) => { setSearchQuery(v); setSelectedExpoId(''); }}
           selectedExpoId={selectedExpoId}
           setSelectedExpoId={setSelectedExpoId}
           results={results}
           status={status}
           onSelectExpo={handleSelectExpo}
-          onSelectItem={handleSelectItem}
+          onSelectItem={(item) => {
+            setSearchQuery(item.nom);
+            setSelectedExpoId(String(item.expo_id));
+            setDetailItemId(item.id);
+          }}
         />
 
         {selectedExpoId && (
           <div className="grid grid-cols-1 gap-8">
-            {/* Formulario de IA */}
             <IdentificationForm 
               selectedExpoId={selectedExpoId}
               selectedExpoName={selectedExpo?.nom || ''}
@@ -120,7 +114,6 @@ function App() {
               onIntentTracked={saveIntent}
             />
 
-            {/* Carrusel de items */}
             {itemsStatus === 'ok' && items.length > 0 && (
               <ExpoCarousel 
                 items={items} 
@@ -139,8 +132,8 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
-      <main className="flex-1 w-full max-w-6xl mx-auto p-4">
+    <div className="flex flex-col min-h-screen bg-slate-100 dark:bg-slate-950 transition-colors duration-300">
+      <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8">
         <header className="mb-10 flex justify-between items-center">
            <h1 
              onClick={() => { setIsLoginOpen(false); setSelectedExpoId(''); setSearchQuery(''); }} 
@@ -149,16 +142,19 @@ function App() {
              UXIA <span className="text-indigo-600">Expos</span>
            </h1>
            
-           <div className="flex gap-4">
+           <div className="flex gap-4 items-center">
              <button 
                onClick={() => setDarkMode(!darkMode)}
-               className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
+               className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 shadow-sm"
              >
                {darkMode ? '☀️' : '🌙'}
              </button>
              {!user && (
-               <button onClick={() => setIsLoginOpen(!isLoginOpen)} className="text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600">
-                 {isLoginOpen ? 'Tornar al Web' : 'Login Admin'}
+               <button 
+                 onClick={() => setIsLoginOpen(!isLoginOpen)} 
+                 className="px-4 py-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl text-sm font-bold shadow-sm hover:text-indigo-600 transition-colors"
+               >
+                 {isLoginOpen ? 'Tornar' : 'Login Admin'}
                </button>
              )}
            </div>
@@ -166,11 +162,10 @@ function App() {
 
         {renderContent()}
 
-        {/* Banner de cookies fuera de renderContent para que siempre sea accesible */}
         {consent === null && <CookieBanner onAccept={acceptCookies} onReject={rejectCookies} />}
         
         {hasConsent && (
-          <div className="mt-8 p-3 rounded-xl border border-slate-200 bg-white/50 dark:bg-slate-800/50 text-xs text-slate-600 dark:text-slate-400">
+          <div className="mt-8 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-800/30 text-xs text-slate-500">
              <p><span className="font-bold">Visitor ID:</span> {visitorId}</p>
           </div>
         )}
