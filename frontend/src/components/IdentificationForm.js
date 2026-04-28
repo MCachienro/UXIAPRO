@@ -116,33 +116,35 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
   };
 
   return (
-    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Identificació</h2>
+    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-100">Identificació</h2>
 
       {cameraActive ? (
-        <div className="mt-3 rounded-xl bg-black overflow-hidden relative">
-          <video ref={videoRef} autoPlay playsInline muted className="w-full aspect-video object-cover" />
+        <div className="relative mt-3 min-h-[320px] overflow-hidden rounded-xl bg-black aspect-video">
+          <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-            <button onClick={capturePhoto} className="bg-white px-6 py-2 rounded-full font-bold">Capturar</button>
-            <button onClick={stopCamera} className="bg-red-500 text-white px-4 py-2 rounded-full font-bold">✕</button>
+            <button onClick={capturePhoto} className="rounded-full bg-white px-6 py-2 font-bold shadow-lg dark:bg-slate-100">Capturar</button>
+            <button onClick={stopCamera} className="rounded-full bg-red-500 px-4 py-2 font-bold text-white shadow-lg">✕</button>
           </div>
         </div>
       ) : (
         <div className="mt-3 flex flex-col gap-3">
-          {cameraError && <p className="text-sm text-red-600 font-bold">{cameraError}</p>}
+          {cameraError && <p className="text-sm font-bold text-red-600 dark:text-red-400">{cameraError}</p>}
           
           {previewUrl ? (
             <>
-              <img src={previewUrl} className="w-full h-48 object-cover rounded-xl" alt="Preview" />
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
+                <img src={previewUrl} className="w-full max-h-[60vh] aspect-video object-contain bg-black" alt="Preview" />
+              </div>
               <div className="flex gap-2">
-                <button onClick={startCamera} className="flex-1 border p-2 rounded-lg font-bold">Repetir</button>
-                <button onClick={handleIdentify} disabled={isIdentifying} className="flex-1 bg-emerald-600 text-white p-2 rounded-lg font-bold">
+                <button onClick={startCamera} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">Repetir</button>
+                <button onClick={handleIdentify} disabled={isIdentifying} className="flex-1 rounded-lg bg-emerald-600 p-2 font-bold text-white dark:bg-emerald-500">
                   {isIdentifying ? 'Analitzant...' : 'Enviar'}
                 </button>
               </div>
             </>
           ) : (
-            <button onClick={startCamera} className="w-full border-2 border-dashed py-6 rounded-xl text-slate-400 font-bold hover:bg-slate-50">
+            <button onClick={startCamera} className="w-full rounded-xl border-2 border-dashed py-6 font-bold text-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/70">
               Obrir càmera
             </button>
           )}
@@ -152,8 +154,8 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       <canvas ref={canvasRef} className="hidden" />
 
       {aiResult && (
-        <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
-          <p className="text-sm text-slate-700">{aiResult}</p>
+        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+          <p className="text-sm text-slate-700 dark:text-slate-200">{aiResult}</p>
         </div>
       )}
     </section>

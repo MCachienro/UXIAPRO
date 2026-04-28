@@ -32,23 +32,23 @@ const LoginForm = ({ onLoginSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm max-w-sm mx-auto">
-      <h3 className="font-bold text-lg mb-4">Login Admin</h3>
+    <form onSubmit={handleSubmit} className="mx-auto max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+      <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-slate-50">Login Admin</h3>
       <input 
-        className="w-full p-2 mb-3 border rounded" 
+        className="mb-3 w-full rounded border border-slate-300 bg-white p-2 text-slate-800 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
         placeholder="Usuari" 
         value={creds.username}
         onChange={e => setCreds({...creds, username: e.target.value})}
       />
       <input 
         type="password"
-        className="w-full p-2 mb-4 border rounded" 
+        className="mb-4 w-full rounded border border-slate-300 bg-white p-2 text-slate-800 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
         placeholder="Contrasenya"
         value={creds.password}
         onChange={e => setCreds({...creds, password: e.target.value})}
       />
-      {error && <p className="mb-3 text-sm font-semibold text-red-600">{error}</p>}
-      <button disabled={isLoading} className="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold disabled:bg-slate-300">
+      {error && <p className="mb-3 text-sm font-semibold text-red-600 dark:text-red-400">{error}</p>}
+      <button disabled={isLoading} className="w-full rounded-lg bg-indigo-600 py-2 font-bold text-white disabled:bg-slate-300 dark:disabled:bg-slate-700">
         {isLoading ? 'Entrant...' : 'Entrar'}
       </button>
     </form>
