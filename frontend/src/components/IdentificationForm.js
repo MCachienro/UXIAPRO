@@ -45,12 +45,6 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       videoRef.current.srcObject = null;
     }
 
-    // 3. LIMPIEZA: Borrar los estados de la imagen para que vuelva al botón inicial
-    setPreviewUrl(null);       // Esto fuerza a que desaparezca la vista previa
-    setPreviewDataUrl('');     // Limpiamos también el DataURL
-    setIdFile(null);           // Limpiamos el archivo
-    setAiResult(null);         // Opcional: Limpiamos resultados anteriores
-
     // 4. Cambiar el estado de la cámara
     setCameraActive(false);
   };
@@ -152,7 +146,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
                 <img src={previewUrl} className="w-full max-h-[60vh] aspect-video object-contain bg-black" alt="Preview" />
               </div>
               <div className="flex gap-2">
-                <button onClick={startCamera} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">Repetir</button>
+                <button onClick={setIsReviewing(false)} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">Repetir</button>
                 <button 
                   onClick={handleIdentify} 
                   disabled={isIdentifying} 
