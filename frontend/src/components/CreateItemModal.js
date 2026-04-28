@@ -24,7 +24,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
             }
 
             // Crear el item
-            await fetch('http://127.0.0.1:8000/api/items', {
+            await fetch('https://uxiaweb1.ieti.site/api/items', {
                 method: 'POST',
                 body: data, // FormData se encarga del content-Type multipart/form-data
             });
