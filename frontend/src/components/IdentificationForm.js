@@ -44,6 +44,8 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       videoRef.current.srcObject = null;
     }
 
+    setPreviewUrl('');
+
     // 3. Cambiar el estado
     setCameraActive(false);
   };
