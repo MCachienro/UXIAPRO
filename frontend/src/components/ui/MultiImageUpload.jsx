@@ -19,7 +19,10 @@ export default function MultiImageUpload({
   const [featuredId, setFeaturedId] = useState(null);
 
   useEffect(() => {
-    setImages(initialImages);
+    // Solo actualiza si el estado actual está vacío o es diferente
+    if (initialImages.length > 0 && images.length === 0) {
+      setImages(initialImages);
+    }
   }, [initialImages]);
 
   const makeAbsoluteUrl = (url) => {
