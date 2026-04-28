@@ -11,7 +11,7 @@ const normalizeImageUrl = (url) => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  return `http://127.0.0.1:8000${url.startsWith('/') ? '' : '/'}${url}`;
+  return `https://uxiaweb1.ieti.site${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
 const AdminDashboard = ({ user, onLogout }) => {
