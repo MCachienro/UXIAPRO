@@ -34,24 +34,17 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
   }, [cameraActive]);
 
   const stopCamera = () => {
-   // 1. Detener el stream (tu código actual)
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
-
-    // 2. Limpiar el elemento de video
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-
-    // 3. LIMPIEZA: Borrar los estados de la imagen para que vuelva al botón inicial
-    setPreviewUrl(null);       // Esto fuerza a que desaparezca la vista previa
-    setPreviewDataUrl('');     // Limpiamos también el DataURL
-    setIdFile(null);           // Limpiamos el archivo
-    setAiResult(null);         // Opcional: Limpiamos resultados anteriores
-
-    // 4. Cambiar el estado de la cámara
+    if (videoRef.current) videoRef.current.srcObject = null;
+    
+    setPreviewUrl(null);
+    setPreviewDataUrl('');
+    setIdFile(null);
+    setAiResult(null);
+    setIsReviewing(false); // <--- AÑADE ESTO
     setCameraActive(false);
   };
 
