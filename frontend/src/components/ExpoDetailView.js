@@ -3,6 +3,11 @@ import CreateItemModal from './CreateItemModal';
 
 const ExpoDetailView = ({ expo, onBack, normalizeImageUrl }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const refreshData = async () => {
+        // Aquí podrías volver a llamar a tu hook o API para traer la expo de nuevo
+        // O simplemente forzar un re-render
+        window.location.reload(); // O mejor aún: usa una función de estado que recargue los datos
+    };
 
     return (
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 animate-in fade-in">
@@ -61,10 +66,7 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl }) => {
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
                 expoId={expo.id}
-                onCreated={() => {
-                    // Aquí deberías llamar a una función para refrescar los datos del dashboard
-                    window.location.reload(); 
-                }}
+                onCreated={refreshData}
             />
         </div>
     );

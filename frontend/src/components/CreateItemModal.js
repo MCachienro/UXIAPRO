@@ -17,13 +17,15 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
             data.append('expo', expoId);
 
             // Añadir imágenes si existen
-            if (files && files.length > 0) {
-                Array.from(files).forEach(file => data.append('imatges', file));
+            if (files) {
+                for (let i = 0; i < files.length; i++) {
+                    data.append('imatges', files[i]);
+                }
             }
 
             // Logica de actualización de estado (Si hay imagenes)
             if (files && files.length > 0) {
-                await fetch(`https://uxiaweb1.ieti.site/api/expos/${expoId}/`, {
+                await fetch(`http://127.0.0.1:8000/api/expos/${expoId}/`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json'},
                     body: JSON.stringify({ estat: "ACTUALITZABLE" }),
@@ -31,7 +33,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
             }
 
             // Crear el item
-            await fetch('https://uxiaweb1.ieti.site/api/items', {
+            await fetch('http://127.0.0.1:8000/api/items', {
                 method: 'POST',
                 body: data, // FormData se encarga del content-Type multipart/form-data
             });
