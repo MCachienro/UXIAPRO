@@ -1,6 +1,7 @@
 import os
 import io
 from pathlib import Path
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.core.files import File
 from django.core.files.base import ContentFile
@@ -45,13 +46,32 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         fake = Faker("es_ES")
+        User = get_user_model()
+
+        faker_owner, created = User.objects.get_or_create(
+            username="faker_admin",
+            defaults={
+                "first_name": "Faker",
+                "last_name": "Admin",
+                "is_staff": True,
+                "is_active": True,
+            },
+        )
+        if created:
+            faker_owner.set_password("faker123")
+            faker_owner.save(update_fields=["password"])
+            self.stdout.write("Usuario faker_admin creado: faker_admin / faker123")
 
         # Generar nombre aleatorio
         ciudades = ["Barcelona", "Madrid", "Valencia", "Sevilla", "Bilbao"]
         sufijos = ["Car show", "Expo Motor", "Salón Automóvil"]
         nombre_expo = f"{random.choice(ciudades)} {random.choice(sufijos)}"
 
-        expo = Expo.objects.create(nom=nombre_expo, descripcio=fake.text(max_nb_chars=220))
+        expo = Expo.objects.create(
+            nom=nombre_expo,
+            descripcio=fake.text(max_nb_chars=220),
+            propietari=faker_owner,
+        )
 
         demo_dir = Path(settings.BASE_DIR) / "media" / "demo"
         demo_images = get_demo_images(demo_dir)

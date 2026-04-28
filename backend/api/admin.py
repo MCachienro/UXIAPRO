@@ -4,6 +4,15 @@ from .models import *
 from django.utils.html import format_html # Importante para formatear el link
 from django.urls import reverse # Importante para generar la URL
 
+# Helper reutilizable para vistas previas basadas en FileField/ImageField.
+def image_preview(file_field):
+    if file_field:
+        return format_html(
+            '<img src="{}" style="width: 100px; height: auto; border-radius: 4px; border: 1px solid #ccc;" />',
+            file_field.url,
+        )
+    return "No hay imagen"
+
 # --- Helper para generar el HTML de la imagen ---
 def get_preview_html(obj):
     """Genera el HTML con la imagen clicable hacia su edición."""
