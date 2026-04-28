@@ -42,7 +42,8 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
                                 <h4 className="font-bold text-slate-800 text-lg mb-2">{item.nom}</h4>
                                 <p className="text-sm text-slate-600 mb-4 line-clamp-3">{item.descripcio}</p>
 
-                                <div className='flex gap-2'>
+                                {/* Aqui deberia hacer que cuando llegue al limite de 7 imagenes, se bajen las siguientes imagenes a una nueva fila */}
+                                <div className='flex gap-2 flex-wrap'>
                                     {otherImages.map((img) => (
                                         <img 
                                             key={img.id} 
