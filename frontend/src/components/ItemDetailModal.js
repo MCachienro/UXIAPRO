@@ -28,14 +28,14 @@ export default function ItemDetailModal({ itemId, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-2 sm:p-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-2 sm:p-4 dark:bg-slate-950/80">
       <button aria-label="Tancar detall" className="absolute inset-0" onClick={onClose} type="button" />
 
-      <section className="relative z-10 my-4 w-full max-w-5xl overflow-y-auto rounded-2xl border border-emerald-100 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.3)] max-h-[92vh] sm:p-4 md:p-5">
+      <section className="relative z-10 my-4 w-full max-w-5xl overflow-y-auto rounded-2xl border border-emerald-100 bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.3)] max-h-[92vh] sm:p-4 md:p-5 dark:border-slate-700 dark:bg-slate-900 dark:shadow-[0_18px_40px_rgba(0,0,0,0.45)]">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-base font-black text-slate-900 sm:text-lg md:text-xl">Detall de l'item</h3>
+          <h3 className="text-base font-black text-slate-900 sm:text-lg md:text-xl dark:text-slate-50">Detall de l'item</h3>
           <button
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100"
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             onClick={onClose}
             type="button"
           >
@@ -43,14 +43,14 @@ export default function ItemDetailModal({ itemId, onClose }) {
           </button>
         </div>
 
-        {detailStatus === 'loading' && <p className="text-sm font-semibold text-slate-700">Carregant item...</p>}
-        {detailStatus === 'error' && <p className="text-sm font-semibold text-red-700">No s'ha pogut carregar aquest item.</p>}
+        {detailStatus === 'loading' && <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Carregant item...</p>}
+        {detailStatus === 'error' && <p className="text-sm font-semibold text-red-700 dark:text-red-400">No s'ha pogut carregar aquest item.</p>}
 
         {detailStatus === 'ok' && detailItem && (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.2fr_1fr]">
             {/* Lado Izquierdo: Galería */}
             <div>
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-orange-50">
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-orange-50 dark:border-slate-700 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800">
                 <div className="flex aspect-[4/3] min-h-[240px] items-center justify-center sm:aspect-video sm:min-h-[260px]">
                   {detailMainImage ? (
                     <img
@@ -61,7 +61,7 @@ export default function ItemDetailModal({ itemId, onClose }) {
                       decoding="async"
                     />
                   ) : (
-                    <div className="px-4 text-center text-sm font-semibold text-slate-500">
+                    <div className="px-4 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
                       Aquest item no te imatges publiques encara.
                     </div>
                   )}
@@ -73,7 +73,7 @@ export default function ItemDetailModal({ itemId, onClose }) {
                 <div className="mt-3 flex items-center justify-center gap-4">
                   <button
                     aria-label="Anterior"
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     onClick={goPrevDetailImage}
                     type="button"
                   >
@@ -81,10 +81,10 @@ export default function ItemDetailModal({ itemId, onClose }) {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                     </svg>
                   </button>
-                  <p className="text-center text-xs font-bold text-slate-800 sm:text-sm">{detailImageIndex + 1} / {detailImages.length}</p>
+                  <p className="text-center text-xs font-bold text-slate-800 dark:text-slate-200 sm:text-sm">{detailImageIndex + 1} / {detailImages.length}</p>
                   <button
                     aria-label="Seguent"
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     onClick={goNextDetailImage}
                     type="button"
                   >
@@ -102,8 +102,8 @@ export default function ItemDetailModal({ itemId, onClose }) {
                     <button
                       className={
                         index === detailImageIndex
-                          ? 'aspect-video overflow-hidden rounded-lg border-2 border-emerald-400 bg-slate-100'
-                          : 'aspect-video overflow-hidden rounded-lg border-2 border-transparent bg-slate-100'
+                          ? 'aspect-video overflow-hidden rounded-lg border-2 border-emerald-400 bg-slate-100 dark:bg-slate-800'
+                          : 'aspect-video overflow-hidden rounded-lg border-2 border-transparent bg-slate-100 dark:bg-slate-800'
                       }
                       key={imageUrl + index}
                       onClick={() => setDetailImageIndex(index)}
@@ -124,19 +124,19 @@ export default function ItemDetailModal({ itemId, onClose }) {
 
             {/* Lado Derecho: Información */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700">Item #{detailItem.id}</p>
-              <h4 className="mt-1 text-xl font-black text-slate-900 sm:text-2xl">{detailItem.nom}</h4>
-              <p className="mt-2 text-sm text-slate-600 md:text-base">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-300">Item #{detailItem.id}</p>
+              <h4 className="mt-1 text-xl font-black text-slate-900 dark:text-slate-50 sm:text-2xl">{detailItem.nom}</h4>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 md:text-base">
                 {detailItem.descripcio || 'Aquest item encara no te descripcio.'}
               </p>
 
               <div className="mt-4">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Etiquetes</p>
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Etiquetes</p>
                 {detailItem.etiquetes && detailItem.etiquetes.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {detailItem.etiquetes.map((tag) => (
                       <span
-                        className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800"
+                        className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
                         key={tag}
                       >
                         {tag}
@@ -144,7 +144,7 @@ export default function ItemDetailModal({ itemId, onClose }) {
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-2 text-sm text-slate-500">Sense etiquetes de moment.</p>
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Sense etiquetes de moment.</p>
                 )}
               </div>
             </div>
