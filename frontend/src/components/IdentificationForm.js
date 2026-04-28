@@ -45,6 +45,12 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       videoRef.current.srcObject = null;
     }
 
+    // 3. LIMPIEZA: Borrar los estados de la imagen para que vuelva al botón inicial
+    setPreviewUrl(null);       // Esto fuerza a que desaparezca la vista previa
+    setPreviewDataUrl('');     // Limpiamos también el DataURL
+    setIdFile(null);           // Limpiamos el archivo
+    setAiResult(null);         // Opcional: Limpiamos resultados anteriores
+
     // 4. Cambiar el estado de la cámara
     setCameraActive(false);
   };
