@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import CreateItemModal from './CreateItemModal';
 
 const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditItem }) => {
     return (
@@ -55,6 +56,13 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
                     );
                 })}
             </div>
+            {/* MODAL DE CREACIÓN */}
+            <CreateItemModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)}
+                expoId={expo.id}
+                onCreated={refreshData}
+            />
         </div>
     );
 };

@@ -2,6 +2,9 @@ from typing import List, Optional
 
 from ninja import NinjaAPI, Schema
 from ninja.errors import HttpError
+from ninja import File, Form
+from typing import List
+from django.core.files.uploadedfile import uploadedfile
 
 from .models import Expo, Item
 
@@ -166,3 +169,36 @@ def get_item(request, item_id: int):
             if image_url
         ],
     }
+
+# Endpoint para crear el item
+@api.post("/items", tags=["Items"])
+def create_item(
+    request, 
+    nom: str = Form(...), 
+    descripcio: str = Form(None), 
+    expo_id: int = Form(...),
+    imatges: List[UploadedFile] = File(None)
+):
+    expo = Expo.objects.get(id=expo_id)
+    
+    # 1. Crear el item
+    item = Item.objects.create(nom=nom, descripcio=descripcio, expo=expo)
+    
+    # 2. Gestionar imágenes
+    if imatges:
+        for img in imatges:
+            Imatge.objects.create(item=item, url_imatge=img)
+        
+        # 3. Si hay imágenes, actualizar el estado de la expo
+        expo.estat = 'ACTUALITZABLE'
+        expo.save()
+        
+    return {"id": item.id, "message": "Item creat correctament"}
+
+# Endpoint para actualizar la expo
+@api.patch("/expos/{expo_id}", tags=["Expos"])
+def update_expo(request, expo_id: int, estat: str):
+    expo = Expo.objects.get(id=expo_id)
+    expo.estat = estat
+    expo.save()
+    return {"id": expo.id, "estat": expo.estat}
