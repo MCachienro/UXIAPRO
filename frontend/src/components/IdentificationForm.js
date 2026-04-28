@@ -33,10 +33,18 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
   }, [cameraActive]);
 
   const stopCamera = () => {
+    // 1. Detener los tracks (esto ya lo hacías)
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+
+    // 2. IMPORTANTE: Limpiar el elemento de video
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    // 3. Cambiar el estado
     setCameraActive(false);
   };
 
@@ -138,7 +146,11 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
               </div>
               <div className="flex gap-2">
                 <button onClick={startCamera} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">Repetir</button>
-                <button onClick={handleIdentify} disabled={isIdentifying} className="flex-1 rounded-lg bg-emerald-600 p-2 font-bold text-white dark:bg-emerald-500">
+                <button 
+                  onClick={handleIdentify} 
+                  disabled={isIdentifying} 
+                  className="flex-1 rounded-lg bg-blue-600 p-2 font-bold text-white hover:bg-blue-700 transition"
+                >
                   {isIdentifying ? 'Analitzant...' : 'Enviar'}
                 </button>
               </div>
