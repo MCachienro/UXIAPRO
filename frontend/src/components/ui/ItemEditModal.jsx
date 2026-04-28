@@ -89,8 +89,13 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
   };
 
   // Callback cuando se suben imágenes exitosamente desde MultiImageUpload
-  const handleImagesUpdated = (updatedImages) => {
-    setImagesData(updatedImages);
+  const handleImagesUpdated = (imageData) => {
+    // Soportar ambos formatos: array (compat) y { images, featuredId }
+    if (Array.isArray(imageData)) {
+      setImagesData(imageData);
+    } else {
+      setImagesData(imageData.images || []);
+    }
   };
 
   if (!isOpen) return null;

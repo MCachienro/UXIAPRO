@@ -3,8 +3,8 @@ from typing import List, Optional
 from ninja import NinjaAPI, Schema
 from ninja.errors import HttpError
 from ninja import File, Form
-from typing import List
-from django.core.files.uploadedfile import uploadedfile
+from typing import List, Optional, Any
+# from django.core.files.uploadedfile import uploadedfile
 
 from .models import Expo, Item
 
@@ -177,7 +177,7 @@ def create_item(
     nom: str = Form(...), 
     descripcio: str = Form(None), 
     expo_id: int = Form(...),
-    imatges: List[UploadedFile] = File(None)
+    imatges: List[Any] = File(None)
 ):
     expo = Expo.objects.get(id=expo_id)
     

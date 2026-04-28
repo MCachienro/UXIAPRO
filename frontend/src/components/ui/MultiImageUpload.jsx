@@ -22,6 +22,12 @@ export default function MultiImageUpload({
     setImages(initialImages);
   }, [initialImages]);
 
+  const makeAbsoluteUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `http://127.0.0.1:8000${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   // Subir nuevas imágenes
   const handleUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -50,9 +56,10 @@ export default function MultiImageUpload({
       }
 
       const data = await response.json();
+      console.log('upload_images response data:', data);
       const newImages = [...images, ...data.images];
       setImages(newImages);
-      if (onImagesUpdated) onImagesUpdated(newImages);
+      if (onImagesUpdated) onImagesUpdated({ images: newImages, featuredId });
       e.target.value = '';
     } catch (err) {
       setError(`Error subiendo: ${err.message}`);
@@ -87,6 +94,8 @@ export default function MultiImageUpload({
       }
 
       setFeaturedId(imageId);
+      console.log('set featured image response ok, imageId=', imageId);
+      if (onImagesUpdated) onImagesUpdated({ images, featuredId: imageId });
     } catch (err) {
       setError(`Error: ${err.message}`);
       console.error('Featured error:', err);
@@ -120,7 +129,8 @@ export default function MultiImageUpload({
       const filtered = images.filter(img => img.id !== imageId);
       setImages(filtered);
       if (featuredId === imageId) setFeaturedId(null);
-      if (onImagesUpdated) onImagesUpdated(filtered);
+      console.log('image deleted, remaining:', filtered);
+      if (onImagesUpdated) onImagesUpdated({ images: filtered, featuredId: featuredId === imageId ? null : featuredId });
     } catch (err) {
       setError(`Error: ${err.message}`);
       console.error('Delete error:', err);
@@ -163,7 +173,7 @@ export default function MultiImageUpload({
           {images.map(img => (
             <div key={img.id} className="relative group">
               <img
-                src={img.url_imatge_absolute || img.url_imatge}
+                src={makeAbsoluteUrl(img.url_imatge_absolute || img.url_imatge)}
                 alt="Item"
                 className="w-full h-24 object-cover rounded border border-gray-300"
               />

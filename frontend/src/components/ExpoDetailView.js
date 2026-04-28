@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import CreateItemModal from './CreateItemModal';
 
-const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditItem }) => {
+const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditItem, onItemsUpdated }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     return (
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 animate-in fade-in">
             <div className="flex items-center justify-between mb-6">
@@ -15,6 +17,14 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
 
             <h2 className="text-3xl font-black text-slate-800 mb-2">{expo.nom}</h2>
             <p className="text-slate-600 mb-8">{expo.descripcio}</p>
+
+            {/* Botón crear item */}
+            <button
+                onClick={() => setIsModalOpen(true)}
+                className="mb-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition"
+            >
+                + Crear nuevo item
+            </button>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {expo.items.map((item) => {
@@ -61,7 +71,10 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
                 expoId={expo.id}
-                onCreated={refreshData}
+                onCreated={() => {
+                    setIsModalOpen(false);
+                    if (onItemsUpdated) onItemsUpdated();
+                }}
             />
         </div>
     );

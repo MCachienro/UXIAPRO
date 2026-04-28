@@ -37,14 +37,36 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   // --- VISTA DETALLE (Se usa el componente nuevo) ---
   if (selectedExpo) {
+    const handleItemsUpdated = async () => {
+      // Refrescar la expo completa del servidor
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(
+          `http://localhost:8000/api/rest/expos/${selectedExpo.id}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        if (response.ok) {
+          const updatedExpo = await response.json();
+          setSelectedExpo(updatedExpo);
+          // Actualizar en la lista también
+          setExposList(list => list.map(e => e.id === updatedExpo.id ? updatedExpo : e));
+        }
+      } catch (err) {
+        console.error('Error refreshing expo:', err);
+      }
+    };
+
     return (
       <>
         <ExpoDetailView 
           expo={selectedExpo} 
           onBack={() => setSelectedExpo(null)} 
-          normalizeImageUrl={normalizeImageUrl} // Pasamos la función helper
+          normalizeImageUrl={normalizeImageUrl}
           onEditExpo={(expo) => setEditingExpo(expo)}
           onEditItem={(item) => setEditingItem(item)}
+          onItemsUpdated={handleItemsUpdated}
         />
 
         {/* Modales globales para edición (siempre montados) */}
@@ -139,14 +161,21 @@ const AdminDashboard = ({ user, onLogout }) => {
           {exposList.map((expo) => {
             const previewItems = (expo.items || []).slice(0, PREVIEW_ITEMS_LIMIT);
 
+            const handleArticleClick = (e) => {
+              // Si el click fue en el botón de editar, no navegar
+              if (e.target.closest('button')) {
+                return;
+              }
+              setSelectedExpo(expo);
+            };
+
             return (
-              <article key={expo.id} className="relative cursor-pointer rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-indigo-200 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-indigo-500/40 dark:hover:bg-slate-800" onClick={() => !editingExpo && setSelectedExpo(expo)}>
+              <article key={expo.id} className="relative cursor-pointer rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-indigo-200 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-indigo-500/40 dark:hover:bg-slate-800" onClick={handleArticleClick}>
                 {/* Botón editar expo (arriba a la derecha) */}
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); setEditingExpo(expo); }}
+                  onClick={(e) => { e.stopPropagation(); setEditingExpo(expo); }}
                   title="Editar expo"
-                  className="absolute top-3 right-3 bg-white/80 px-3 py-1 rounded shadow hover:bg-white"
+                  className="absolute top-3 right-3 z-20 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded shadow transition font-bold"
                 >
                   ✏️
                 </button>
