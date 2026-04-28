@@ -91,7 +91,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
                 const firstImage = uploadedImages[0];
                 const token = localStorage.getItem('token');
                 await fetch(
-                    `http://localhost:8000/api/rest/items/${createdItemId}/set_featured_image/`,
+                    `https://uxiaweb1.ieti.site/api/rest/items/${createdItemId}/set_featured_image/`,
                     {
                         method: 'PUT',
                         headers: {
