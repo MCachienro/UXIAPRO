@@ -17,6 +17,7 @@ export default function MultiImageUpload({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [featuredId, setFeaturedId] = useState(null);
+  const [previews, setPreviews] = useState([]);
 
   useEffect(() => {
     setImages(initialImages);
@@ -32,6 +33,14 @@ export default function MultiImageUpload({
   const handleUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
+
+    // 1. Crear previsualizaciones locales inmediatas
+    const newPreviews = files.map(file => ({
+      id: Math.random().toString(), // ID temporal
+      url: URL.createObjectURL(file),
+      isLocal: true
+    }));
+    setPreviews(prev => [...prev, ...newPreviews]);
 
     setLoading(true);
     setError(null);
@@ -55,8 +64,7 @@ export default function MultiImageUpload({
         throw new Error(`Error ${response.status}: ${errText}`);
       }
 
-      const data = await response.json();
-      console.log('upload_images response data:', data);
+      setPreviews([]); 
       const newImages = [...images, ...data.images];
       setImages(newImages);
       if (onImagesUpdated) onImagesUpdated({ images: newImages, featuredId });
@@ -64,6 +72,7 @@ export default function MultiImageUpload({
     } catch (err) {
       setError(`Error subiendo: ${err.message}`);
       console.error('Upload error:', err);
+      setPreviews([]);
     } finally {
       setLoading(false);
     }
@@ -170,6 +179,13 @@ export default function MultiImageUpload({
       {/* Imágenes */}
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
+          {/* Renderizado de Previsualizaciones (Locales) */}
+          {previews.map(p => (
+            <div key={p.id} className="relative opacity-50 animate-pulse">
+              <img src={p.url} className="w-full h-24 object-cover rounded border" alt="previsualización" />
+              <div className="absolute inset-0 flex items-center justify-center text-xs text-white bg-black/20">Subiendo...</div>
+            </div>
+          ))}
           {images.map(img => (
             <div key={img.id} className="relative group">
               <img
