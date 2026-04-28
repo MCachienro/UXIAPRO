@@ -130,46 +130,68 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
     }
   };
 
+  // ... (resto de tu componente antes del return)
+
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-100">Identificació</h2>
 
-      {(cameraActive && !isReviewing) ? (
+      {/* BLOQUE CÁMARA: Siempre presente si cameraActive es true */}
+      {cameraActive && (
         <div className="relative mt-3 min-h-[320px] overflow-hidden rounded-xl bg-black aspect-video">
-          <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-            <button onClick={capturePhoto} className="rounded-full bg-white px-6 py-2 font-bold shadow-lg dark:bg-slate-100">Capturar</button>
-            <button onClick={stopCamera} className="rounded-full bg-red-500 px-4 py-2 font-bold text-white shadow-lg">✕</button>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-3 flex flex-col gap-3">
-          {cameraError && <p className="text-sm font-bold text-red-600 dark:text-red-400">{cameraError}</p>}
           
-          {previewUrl ? (
-            <>
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
-                <img src={previewUrl} className="w-full max-h-[60vh] aspect-video object-contain bg-black" alt="Preview" />
-              </div>
-              <div className="flex gap-2">
-                <button onClick={setIsReviewing(false)} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">Repetir</button>
+          {/* El video está siempre montado, pero lo ocultamos cuando revisamos la foto */}
+          <video 
+            ref={videoRef} 
+            autoPlay playsInline muted 
+            className={`absolute inset-0 h-full w-full object-cover ${isReviewing ? 'hidden' : 'block'}`} 
+          />
+
+          {/* La imagen aparece SOLO cuando isReviewing es true */}
+          {isReviewing && previewUrl && (
+            <img src={previewUrl} className="absolute inset-0 h-full w-full object-contain" alt="Preview" />
+          )}
+
+          {/* BOTONES: Cambian dinámicamente */}
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 z-10 px-4">
+            {!isReviewing ? (
+              // ESTADO 1: Cámara en vivo
+              <>
+                <button onClick={capturePhoto} className="flex-1 rounded-full bg-white px-6 py-2 font-bold shadow-lg">Capturar</button>
+                <button onClick={stopCamera} className="rounded-full bg-red-500 px-4 py-2 font-bold text-white shadow-lg w-12">✕</button>
+              </>
+            ) : (
+              // ESTADO 2: Foto capturada (Revisión)
+              <>
+                <button 
+                  onClick={() => setIsReviewing(false)} 
+                  className="flex-1 rounded-full bg-slate-600 px-6 py-2 font-bold text-white shadow-lg"
+                >
+                  Repetir
+                </button>
                 <button 
                   onClick={handleIdentify} 
-                  disabled={isIdentifying} 
-                  className="flex-1 rounded-lg bg-blue-600 p-2 font-bold text-white hover:bg-blue-700 transition"
+                  disabled={isIdentifying}
+                  className="flex-1 rounded-full bg-blue-600 px-6 py-2 font-bold text-white shadow-lg"
                 >
                   {isIdentifying ? 'Analitzant...' : 'Enviar'}
                 </button>
-              </div>
-            </>
-          ) : (
-            <button onClick={startCamera} className="w-full rounded-xl border-2 border-dashed py-6 font-bold text-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/70">
-              Obrir càmera
-            </button>
-          )}
+              </>
+            )}
+          </div>
         </div>
       )}
 
+      {/* ESTADO INICIAL: Botón para abrir cámara si está apagada */}
+      {!cameraActive && (
+        <div className="mt-3">
+          <button onClick={startCamera} className="w-full rounded-xl border-2 border-dashed py-6 font-bold text-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/70">
+            Obrir càmera
+          </button>
+        </div>
+      )}
+
+      {/* Canvas oculto y resultados */}
       <canvas ref={canvasRef} className="hidden" />
 
       {aiResult && (
