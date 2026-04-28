@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
+    console.log("El expoId que recibe el modal es:", expoId);
     const [formData, setFormData] = useState({ nom: '', descripcio: '', tags: ''});
     const [files, setFiles] = useState(null);
     const [loading, setLoading] = useState(false);

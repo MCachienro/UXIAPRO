@@ -65,7 +65,7 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl }) => {
             <CreateItemModal 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
-                expoId={expo.expo_id}
+                expoId={expo.id}
                 onCreated={refreshData}
             />
         </div>
