@@ -2,6 +2,9 @@ from typing import List, Optional
 
 from ninja import NinjaAPI, Schema
 from ninja.errors import HttpError
+from ninja import File, Form
+from typing import List, Optional, Any
+# from django.core.files.uploadedfile import uploadedfile
 
 from .models import Expo, Item
 
@@ -36,6 +39,16 @@ class ItemDetailOut(ItemOut):
     imatges_publiques: List[str]
 
 
+class SearchResultOut(Schema):
+    tipus: str
+    id: int
+    nom: str
+    descripcio: Optional[str] = None
+    expo_id: Optional[int] = None
+    expo_nom: Optional[str] = None
+    imatge_destacada_url: Optional[str] = None
+
+
 api = NinjaAPI(title="UXIA API")
 
 
@@ -49,6 +62,48 @@ def search_expos(request, q: Optional[str] = None):
     if q:
         return Expo.objects.filter(nom__icontains=q).order_by("id")
     return Expo.objects.all().order_by("id")
+
+
+@api.get("/search", response=List[SearchResultOut], tags=["Search"])
+def polymorphic_search(request, q: Optional[str] = None):
+    query = (q or "").strip()
+    if len(query) < 3:
+        return []
+
+    expos = Expo.objects.filter(nom__icontains=query).order_by("id")
+    items = (
+        Item.objects.select_related("expo", "imatge_destacada")
+        .filter(nom__icontains=query)
+        .order_by("id")
+    )
+
+    results = [
+        {
+            "tipus": "EXPO",
+            "id": expo.id,
+            "nom": expo.nom,
+            "descripcio": expo.descripcio,
+        }
+        for expo in expos
+    ]
+
+    results.extend(
+        {
+            "tipus": "ITEM",
+            "id": item.id,
+            "nom": item.nom,
+            "descripcio": item.descripcio,
+            "expo_id": item.expo_id,
+            "expo_nom": item.expo.nom,
+            "imatge_destacada_url": _build_file_url(
+                request,
+                item.imatge_destacada.url_imatge if item.imatge_destacada else None,
+            ),
+        }
+        for item in items
+    )
+
+    return results
 
 
 @api.get("/expos/{expo_id}", response=ExpoOut, tags=["Expos"])
@@ -114,3 +169,36 @@ def get_item(request, item_id: int):
             if image_url
         ],
     }
+
+# Endpoint para crear el item
+@api.post("/items", tags=["Items"])
+def create_item(
+    request, 
+    nom: str = Form(...), 
+    descripcio: str = Form(None), 
+    expo_id: int = Form(...),
+    imatges: List[Any] = File(None)
+):
+    expo = Expo.objects.get(id=expo_id)
+    
+    # 1. Crear el item
+    item = Item.objects.create(nom=nom, descripcio=descripcio, expo=expo)
+    
+    # 2. Gestionar imágenes
+    if imatges:
+        for img in imatges:
+            Imatge.objects.create(item=item, url_imatge=img)
+        
+        # 3. Si hay imágenes, actualizar el estado de la expo
+        expo.estat = 'ACTUALITZABLE'
+        expo.save()
+        
+    return {"id": item.id, "message": "Item creat correctament"}
+
+# Endpoint para actualizar la expo
+@api.patch("/expos/{expo_id}", tags=["Expos"])
+def update_expo(request, expo_id: int, estat: str):
+    expo = Expo.objects.get(id=expo_id)
+    expo.estat = estat
+    expo.save()
+    return {"id": expo.id, "estat": expo.estat}

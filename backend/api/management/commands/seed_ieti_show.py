@@ -1,5 +1,6 @@
 import os
 import io
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.core.files import File
 from django.core.files.base import ContentFile
@@ -41,10 +42,23 @@ class Command(BaseCommand):
         return sorted(files)
 
     def handle(self, *args, **kwargs):
+        User = get_user_model()
+        admin_user, created = User.objects.get_or_create(
+            username="admin",
+            defaults={"is_staff": True, "is_superuser": True, "is_active": True},
+        )
+        if created:
+            admin_user.set_password("admin123")
+            admin_user.save(update_fields=["password"])
+            self.stdout.write("Usuario admin creado: admin / admin123")
+
         # 1. Crear Expo
         expo, created = Expo.objects.get_or_create(
             nom="IETI CAR SHOW",
-            defaults={"descripcio": "Exposición oficial del centro IETI"}
+            defaults={
+                "descripcio": "Exposición oficial del centro IETI",
+                "propietari": admin_user,
+            }
         )
         ruta_base_fotos = os.path.join(settings.BASE_DIR, 'media', 'cotxes')
 
@@ -54,9 +68,17 @@ class Command(BaseCommand):
         self.stdout.write("Limpieza realizada: todos los items de la expo han sido eliminados.")
         # ---------------------------------------------------------------------
 
+        expo_needs_update = False
         if expo.descripcio != "Exposición oficial del centro IETI":
             expo.descripcio = "Exposición oficial del centro IETI"
-            expo.save(update_fields=["descripcio", "data_actualitzacio"])
+            expo_needs_update = True
+
+        if expo.propietari_id != admin_user.id:
+            expo.propietari = admin_user
+            expo_needs_update = True
+
+        if expo_needs_update:
+            expo.save(update_fields=["descripcio", "propietari", "data_actualitzacio"])
 
         # 2. Lista de coches reales (ajusta los nomres y paths)
         coches = [
