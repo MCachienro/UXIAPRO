@@ -20,7 +20,7 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl }) => {
             {/* BOTÓN NUEVO ITEM */}
             <button
                 onClick={() => setIsModalOpen(true)}
-                className='bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-full font-bold transition shadow-md'
+                className='bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-full font-bold transition shadow-md'
             >
                 + NOU ITEM
             </button>
