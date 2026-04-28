@@ -62,16 +62,25 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
         }
     };
 
-    // Callback cuando se suben imágenes - solo actualiza estado, NO cierra
     const handleImagesUploaded = (imageData) => {
-        // imageData puede ser: array (compat) o { images, featuredId }
-        if (Array.isArray(imageData)) {
-            setUploadedImages(imageData);
-            setFeaturedImageId(null);
-        } else {
-            setUploadedImages(imageData.images || []);
-            setFeaturedImageId(imageData.featuredId || null);
-        }
+        // 1. Obtenemos las imágenes (manejando si es array directo o el objeto con {images, featuredId})
+        const rawImages = Array.isArray(imageData) ? imageData : (imageData.images || []);
+
+        // 2. NORMALIZACIÓN: Aquí "mapeamos" los datos.
+        // Esto asegura que cada objeto imagen tenga las claves que tu componente de visualización espera.
+        const normalizedImages = rawImages.map(img => ({
+            ...img,
+            // Si tu API devuelve las rutas en campos con otros nombres (ej: 'url' o 'image'),
+            // los capturamos aquí usando el operador OR (||)
+            url_imatge: img.url_imatge || img.image || img.url || '',
+            url_imatge_absolute: img.url_imatge_absolute || img.url_imatge || img.url || ''
+        }));
+
+        // 3. Guardamos los datos ya normalizados
+        setUploadedImages(normalizedImages);
+        
+        // 4. Gestionamos el ID de la destacada
+        setFeaturedImageId(imageData.featuredId || null);
     };
 
     // Botón Guardar en Paso 2
