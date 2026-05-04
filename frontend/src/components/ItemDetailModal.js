@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useItemDetail } from '../hooks/useItemDetail';
+import TTSButton from './ui/TTSButton';
 
 export default function ItemDetailModal({ itemId, onClose }) {
   const { detailItem, detailStatus } = useItemDetail(itemId);
@@ -124,8 +125,24 @@ export default function ItemDetailModal({ itemId, onClose }) {
 
             {/* Lado Derecho: Información */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-300">Item #{detailItem.id}</p>
-              <h4 className="mt-1 text-xl font-black text-slate-900 dark:text-slate-50 sm:text-2xl">{detailItem.nom}</h4>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-700 dark:text-emerald-300">
+                    Item #{detailItem.id}
+                  </p>
+                  <h4 className="mt-1 text-xl font-black text-slate-900 dark:text-slate-50 sm:text-2xl">
+                    {detailItem.nom}
+                  </h4>
+                </div>
+                
+                {/* INVOCACIÓN DEL NUEVO COMPONENTE */}
+                {detailItem.descripcio && (
+                  <TTSButton 
+                    text={detailItem.descripcio} 
+                    lang={detailItem.lang || 'ca'} 
+                  />
+                )}
+              </div>      
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 md:text-base">
                 {detailItem.descripcio || 'Aquest item encara no te descripcio.'}
               </p>
