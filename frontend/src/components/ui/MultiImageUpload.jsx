@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * MultiImageUpload - Componente simple para cargar múltiples imágenes
@@ -13,6 +14,7 @@ export default function MultiImageUpload({
   onImagesUpdated,
   initialImages = []
 }) {
+  const { t } = useTranslation();
   const [images, setImages] = useState(initialImages);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -109,7 +111,7 @@ export default function MultiImageUpload({
 
   // Eliminar imagen
   const handleDelete = async (imageId) => {
-    if (!window.confirm('¿Eliminar esta imagen?')) return;
+    if (!window.confirm(t('multiImage.confirmDelete'))) return;
 
     setLoading(true);
     setError(null);
@@ -144,7 +146,7 @@ export default function MultiImageUpload({
 
   return (
     <div className="space-y-4">
-      <h4 className="font-semibold text-gray-900 dark:text-white">Imágenes del item</h4>
+      <h4 className="font-semibold text-gray-900 dark:text-white">{t('multiImage.title')}</h4>
 
       {error && (
         <div className="p-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 text-sm rounded">
@@ -164,8 +166,8 @@ export default function MultiImageUpload({
             className="hidden"
           />
           <div className="text-center text-gray-600 dark:text-gray-400">
-            <p>📸 Selecciona imágenes o arrastra aquí</p>
-            <p className="text-xs mt-1">Múltiples archivos permitidos</p>
+            <p>📸 {t('multiImage.dropzoneTitle')}</p>
+            <p className="text-xs mt-1">{t('multiImage.dropzoneSubtitle')}</p>
           </div>
         </label>
       </div>
@@ -194,7 +196,7 @@ export default function MultiImageUpload({
                   onClick={() => handleSetFeatured(img.id)}
                   disabled={loading}
                   className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 text-xs rounded"
-                  title="Marcar destacada"
+                  title={t('multiImage.markFeatured')}
                 >
                   ★
                 </button>
@@ -202,7 +204,7 @@ export default function MultiImageUpload({
                   onClick={() => handleDelete(img.id)}
                   disabled={loading}
                   className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 text-xs rounded"
-                  title="Eliminar"
+                  title={t('multiImage.delete')}
                 >
                   ✕
                 </button>
@@ -213,7 +215,7 @@ export default function MultiImageUpload({
       )}
 
       {images.length === 0 && (
-        <p className="text-center text-gray-500 dark:text-gray-400 py-4">Sin imágenes</p>
+        <p className="text-center text-gray-500 dark:text-gray-400 py-4">{t('multiImage.noImages')}</p>
       )}
     </div>
   );

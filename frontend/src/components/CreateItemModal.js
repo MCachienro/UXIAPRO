@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import MultiImageUpload from './ui/MultiImageUpload';
 
 /**
@@ -10,6 +11,7 @@ import MultiImageUpload from './ui/MultiImageUpload';
  * - Seleccionar una como destacada (automáticamente la primera)
  */
 const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({ nom: '', descripcio: '' });
     const [createdItemId, setCreatedItemId] = useState(null);
     const [itemCreated, setItemCreated] = useState(false);
@@ -25,7 +27,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
         setError(null);
 
         if (!formData.nom.trim()) {
-            setError('El nombre del item es obligatorio');
+            setError(t('createItem.errors.requiredName'));
             setLoading(false);
             return;
         }
@@ -55,7 +57,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
             setItemCreated(true); // Mostrar MultiImageUpload
 
         } catch (err) {
-            setError(err.message || 'Error al crear el item');
+            setError(err.message || t('createItem.errors.createFailed'));
             console.error('Create item error:', err);
         } finally {
             setLoading(false);
@@ -86,7 +88,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
     // Botón Guardar en Paso 2
     const handleFinalize = async () => {
         if (uploadedImages.length === 0) {
-            setError('Debes subir al menos una imagen');
+            setError(t('createItem.errors.requiredImages'));
             return;
         }
 
@@ -117,7 +119,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
             handleClose();
 
         } catch (err) {
-            setError(err.message || 'Error al guardar el item');
+            setError(err.message || t('createItem.errors.saveFailed'));
             console.error('Finalize error:', err);
         } finally {
             setLoading(false);
@@ -139,7 +141,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
             <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {itemCreated ? '📸 Subir imágenes' : 'Crear nuevo item'}
+                        {itemCreated ? `📸 ${t('createItem.uploadImagesTitle')}` : t('createItem.createTitle')}
                     </h3>
                     <button
                         onClick={handleClose}
@@ -160,7 +162,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
                     <form onSubmit={handleCreateItem} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Nombre del item *
+                                {t('createItem.itemNameLabel')} *
                             </label>
                             <input
                                 type="text"
@@ -168,14 +170,14 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
                                 onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
                                 disabled={loading}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
-                                placeholder="Ej: Seat León 2023"
+                                placeholder={t('createItem.itemNamePlaceholder')}
                                 required
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Descripción
+                                {t('createItem.descriptionLabel')}
                             </label>
                             <textarea
                                 value={formData.descripcio}
@@ -183,7 +185,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
                                 disabled={loading}
                                 rows="3"
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
-                                placeholder="Describe el item..."
+                                placeholder={t('createItem.descriptionPlaceholder')}
                             />
                         </div>
 
@@ -194,14 +196,14 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
                                 disabled={loading}
                                 className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition"
                             >
-                                Cancelar
+                                {t('common.cancel')}
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
                                 className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white rounded transition font-medium"
                             >
-                                {loading ? 'Creando...' : 'Siguiente'}
+                                {loading ? t('createItem.creating') : t('common.next')}
                             </button>
                         </div>
                     </form>
@@ -209,7 +211,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
                     // PASO 2: Subir imágenes + botón Guardar
                     <div className="space-y-4">
                         <div className="p-3 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded text-sm">
-                            📸 Sube las imágenes del item. Selecciona una como destacada (con ⭐). Si no seleccionas ninguna, se usará la primera.
+                            📸 {t('createItem.uploadHint')}
                         </div>
                         <MultiImageUpload
                             itemId={createdItemId}
@@ -224,7 +226,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
                                 disabled={loading}
                                 className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition"
                             >
-                                Cancelar
+                                {t('common.cancel')}
                             </button>
                             <button
                                 type="button"
@@ -232,7 +234,7 @@ const CreateItemModal = ({ expoId, isOpen, onClose, onCreated }) => {
                                 disabled={loading || uploadedImages.length === 0}
                                 className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded transition font-medium"
                             >
-                                {loading ? 'Guardando...' : '✓ Guardar Item'}
+                                {loading ? t('common.saving') : `✓ ${t('createItem.saveItem')}`}
                             </button>
                         </div>
                     </div>

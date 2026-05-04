@@ -47,7 +47,6 @@ urlpatterns = [
     path('api/rest/', include(router.urls)), 
     
     path('api/', uxia_api.urls),
-    path('', uxia_api.urls),
 ]
 
 if settings.DEBUG:

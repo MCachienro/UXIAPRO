@@ -1,5 +1,6 @@
 import logoGeneralitat from '../assets/logo-generalitat.png';
 import logoMinisterioFP from '../assets/logo-ministerio-fp.png';
+import { useTranslation } from 'react-i18next';
 
 const FOOTER_LOGOS = [
   {
@@ -15,11 +16,13 @@ const FOOTER_LOGOS = [
 ];
 
 function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="mt-auto border-t border-emerald-100/80 bg-white/80 py-3 backdrop-blur-sm sm:py-5">
       <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 md:px-6">
         <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:mb-4 sm:text-xs sm:tracking-[0.16em]">
-          Programa InnovaFP - Entitats financiadores
+          {t('footer.title')}
         </p>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">

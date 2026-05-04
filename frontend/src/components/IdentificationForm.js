@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 export default function IdentificationForm({ selectedExpoId, selectedExpoName, onIntentTracked }) {
+  const { t } = useTranslation();
   const [idFile, setIdFile] = useState(null);
   const [aiResult, setAiResult] = useState(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
@@ -65,7 +67,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       streamRef.current = stream;
       setCameraActive(true);
     } catch (error) {
-      setCameraError('No s\'ha pogut accedir a la càmera. Assegura\'t de donar permisos.');
+      setCameraError(t('identification.cameraError'));
       setCameraActive(false);
     }
   };
@@ -105,7 +107,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
     
     try {
       const response = await axios.post(`${API_BASE_URL}/identificar/`, formData);
-      const message = response.data.mensaje || 'Sense resultat';
+      const message = response.data.mensaje || t('identification.noResult');
       setAiResult(message);
 
       if (typeof onIntentTracked === 'function') {
@@ -120,7 +122,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
         });
       }
     } catch (e) {
-      setAiResult("Error al processar la identificació.");
+      setAiResult(t('identification.processingError'));
     } finally {
       setIsIdentifying(false);
     }
@@ -128,13 +130,13 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
 
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-100">Identificació</h2>
+      <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-100">{t('identification.title')}</h2>
 
       {cameraActive ? (
         <div className="relative mt-3 min-h-[320px] overflow-hidden rounded-xl bg-black aspect-video">
           <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-            <button onClick={capturePhoto} className="rounded-full bg-white px-6 py-2 font-bold shadow-lg dark:bg-slate-100">Capturar</button>
+            <button onClick={capturePhoto} className="rounded-full bg-white px-6 py-2 font-bold shadow-lg dark:bg-slate-100">{t('identification.capture')}</button>
             <button onClick={resetCamera} className="rounded-full bg-red-500 px-4 py-2 font-bold text-white shadow-lg">✕</button>
           </div>
         </div>
@@ -148,19 +150,19 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
                 <img src={previewUrl} className="w-full max-h-[60vh] aspect-video object-contain bg-black" alt="Preview" />
               </div>
               <div className="flex gap-2">
-                <button onClick={startCamera} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">Repetir</button>
+                <button onClick={startCamera} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">{t('identification.repeat')}</button>
                 <button 
                   onClick={handleIdentify} 
                   disabled={isIdentifying} 
                   className="flex-1 rounded-lg bg-blue-600 p-2 font-bold text-white hover:bg-blue-700 transition"
                 >
-                  {isIdentifying ? 'Analitzant...' : 'Enviar'}
+                  {isIdentifying ? t('identification.analyzing') : t('identification.send')}
                 </button>
               </div>
             </>
           ) : (
             <button onClick={startCamera} className="w-full rounded-xl border-2 border-dashed py-6 font-bold text-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/70">
-              Obrir càmera
+              {t('identification.openCamera')}
             </button>
           )}
         </div>

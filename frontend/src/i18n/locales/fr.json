@@ -1,0 +1,162 @@
+{
+  "language": {
+    "label": "Langue"
+  },
+  "common": {
+    "cancel": "Annuler",
+    "next": "Suivant",
+    "saving": "Enregistrement...",
+    "save": "Enregistrer",
+    "close": "Fermer"
+  },
+  "app": {
+    "backToWeb": "Retour au site",
+    "loginAdmin": "Connexion admin",
+    "openHistory": "Ouvrir l'historique",
+    "historyTitle": "Historique"
+  },
+  "search": {
+    "label": "Recherche d'expositions",
+    "placeholder": "Saisissez au moins 3 lettres...",
+    "expoPrefix": "Expo",
+    "featuredImage": "Image principale disponible",
+    "noResults": "Aucun résultat trouvé.",
+    "typeExpo": "Expo",
+    "typeItem": "Item"
+  },
+  "carousel": {
+    "defaultExpo": "Exposition",
+    "noImage": "Pas d'image"
+  },
+  "identification": {
+    "title": "Identification",
+    "cameraError": "Impossible d'accéder à la caméra. Vérifiez les autorisations.",
+    "capture": "Capturer",
+    "repeat": "Reprendre",
+    "analyzing": "Analyse en cours...",
+    "send": "Envoyer",
+    "openCamera": "Ouvrir la caméra",
+    "processingError": "Erreur lors du traitement de l'identification.",
+    "noResult": "Aucun résultat"
+  },
+  "itemDetail": {
+    "title": "Détail de l'item",
+    "close": "Fermer",
+    "loading": "Chargement de l'item...",
+    "error": "Impossible de charger cet item.",
+    "noPublicImages": "Cet item n'a pas encore d'images publiques.",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "noDescription": "Cet item n'a pas encore de description.",
+    "tags": "Étiquettes",
+    "noTags": "Aucune étiquette pour le moment."
+  },
+  "footer": {
+    "title": "Programme InnovaFP - Entités de financement"
+  },
+  "cookie": {
+    "title": "Cookies et suivi local",
+    "description": "Nous utilisons le stockage local sans expiration pour conserver l'historique des tentatives MarIA (photo envoyée + réponse IA + item_id).",
+    "accept": "Accepter",
+    "reject": "Refuser"
+  },
+  "history": {
+    "badge": "Historique MarIA",
+    "title": "Dernières tentatives enregistrées",
+    "close": "Fermer",
+    "emptyTitle": "Aucun historique pour le moment",
+    "emptyDescription": "Lorsque vous envoyez une photo à MarIA, elle apparaîtra ici avec l'image et la réponse.",
+    "intentAlt": "Tentative MarIA",
+    "expoWithoutName": "Expo sans nom",
+    "itemId": "Item ID",
+    "responseLabel": "Réponse",
+    "noResponse": "Sans réponse",
+    "noDate": "Sans date"
+  },
+  "login": {
+    "title": "Connexion admin",
+    "username": "Utilisateur",
+    "password": "Mot de passe",
+    "loading": "Connexion...",
+    "submit": "Entrer",
+    "errors": {
+      "noToken": "Aucun token d'accès reçu",
+      "invalidCredentials": "Identifiants incorrects ou API indisponible."
+    }
+  },
+  "admin": {
+    "loading": "Chargement...",
+    "dashboard": "Tableau de bord admin",
+    "hello": "Bonjour",
+    "logout": "Logout",
+    "myExpos": "MyExpos",
+    "backToSummary": "Retour au résumé",
+    "summaryTitle": "Résumé administrateur",
+    "summaryLine1": "Vous avez {{exposCount}} expositions assignées et {{itemsCount}} items au total.",
+    "summaryLine2": "Appuyez sur MyExpos pour voir et modifier vos expositions.",
+    "editExpo": "Modifier expo",
+    "status": "État",
+    "noDescription": "Sans description",
+    "previewItems": "Aperçu des premiers items",
+    "expoWithoutItems": "Cette expo n'a pas encore d'items.",
+    "noAssignedExpos": "Vous n'avez pas d'expositions assignées."
+  },
+  "expoDetail": {
+    "backToMyExpos": "Retour à MyExpos",
+    "createNewItem": "Créer un nouvel item",
+    "detailAlt": "Détail",
+    "editItem": "Modifier item"
+  },
+  "createItem": {
+    "createTitle": "Créer un nouvel item",
+    "uploadImagesTitle": "Téléverser des images",
+    "itemNameLabel": "Nom de l'item",
+    "itemNamePlaceholder": "Ex: Seat Leon 2023",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Décrivez l'item...",
+    "creating": "Création...",
+    "uploadHint": "Téléversez les images de l'item. Sélectionnez-en une comme image principale (⭐). Si aucune n'est sélectionnée, la première sera utilisée.",
+    "saveItem": "Enregistrer item",
+    "errors": {
+      "requiredName": "Le nom de l'item est obligatoire",
+      "createFailed": "Erreur lors de la création de l'item",
+      "requiredImages": "Vous devez téléverser au moins une image",
+      "saveFailed": "Erreur lors de l'enregistrement de l'item"
+    }
+  },
+  "expoEdit": {
+    "title": "Modifier expo",
+    "nameLabel": "Nom",
+    "namePlaceholder": "Ex: IETI Car Show",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Décrivez l'exposition...",
+    "errors": {
+      "requiredName": "Le nom de l'expo est obligatoire",
+      "saveFailed": "Erreur lors de l'enregistrement de l'expo"
+    }
+  },
+  "itemEdit": {
+    "title": "Modifier item",
+    "basicInfo": "Informations de base",
+    "nameLabel": "Nom",
+    "namePlaceholder": "Ex: Seat Leon 2023",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Décrivez l'item...",
+    "saveInfo": "Enregistrer les informations",
+    "hideImageManager": "▼ Masquer le gestionnaire d'images",
+    "showImageManager": "▶ Afficher le gestionnaire d'images",
+    "errors": {
+      "requiredName": "Le nom de l'item est obligatoire",
+      "saveFailed": "Erreur lors de l'enregistrement de l'item"
+    }
+  },
+  "multiImage": {
+    "title": "Images de l'item",
+    "dropzoneTitle": "Sélectionnez des images ou glissez-les ici",
+    "dropzoneSubtitle": "Fichiers multiples autorisés",
+    "markFeatured": "Marquer en principal",
+    "delete": "Supprimer",
+    "confirmDelete": "Supprimer cette image ?",
+    "noImages": "Aucune image"
+  }
+}
