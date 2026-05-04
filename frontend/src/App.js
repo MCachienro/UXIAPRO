@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useExpos } from './hooks/useExpos';
 import { useExpoItems } from './hooks/useExpoItems';
 import { useSearchResults } from './hooks/useSearchResults';
@@ -13,8 +14,11 @@ import AdminDashboard from './components/AdminDashboard';
 import LoginForm from './components/LoginForm';
 import CookieBanner from './components/ui/CookieBanner';
 import HistoryModal from './components/ui/HistoryModal';
+import LanguageSelector from './components/ui/LanguageSelector';
 
 function App() {
+  const { t } = useTranslation();
+
   // --- 1. LÓGICA DE DARK MODE ---
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -142,33 +146,34 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
       <main className="flex-1 w-full max-w-6xl mx-auto p-4">
-        <header className="mb-10 flex justify-between items-center">
+        <header className="mb-10 flex flex-col items-center gap-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
            <h1 
              onClick={() => { setIsLoginOpen(false); setSelectedExpoId(''); setSearchQuery(''); }} 
-             className="cursor-pointer text-4xl font-black uppercase tracking-tighter text-slate-800 dark:text-white"
+             className="cursor-pointer text-3xl font-black uppercase tracking-tighter text-slate-800 dark:text-white sm:text-4xl"
            >
              UXIA <span className="text-indigo-600">Expos</span>
            </h1>
            
-           <div className="flex gap-4">
+           <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
              <button 
                onClick={() => setDarkMode(!darkMode)}
-               className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
+               className="rounded-full border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
              >
                {darkMode ? '☀️' : '🌙'}
              </button>
             <button
               type="button"
               onClick={() => setIsHistoryOpen(true)}
-              className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
-              aria-label="Obrir historial"
-              title="Historial"
+              className="rounded-full border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+              aria-label={t('app.openHistory')}
+              title={t('app.historyTitle')}
             >
               🕒
             </button>
+            <LanguageSelector />
              {!user && (
-               <button onClick={() => setIsLoginOpen(!isLoginOpen)} className="text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-indigo-600">
-                 {isLoginOpen ? 'Tornar al Web' : 'Login Admin'}
+               <button onClick={() => setIsLoginOpen(!isLoginOpen)} className="inline-flex h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-sm font-bold leading-none text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600">
+                 {isLoginOpen ? t('app.backToWeb') : t('app.loginAdmin')}
                </button>
              )}
            </div>

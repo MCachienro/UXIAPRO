@@ -1,0 +1,162 @@
+{
+  "language": {
+    "label": "Idioma"
+  },
+  "common": {
+    "cancel": "Cancel·lar",
+    "next": "Següent",
+    "saving": "Guardant...",
+    "save": "Guardar",
+    "close": "Tancar"
+  },
+  "app": {
+    "backToWeb": "Tornar al web",
+    "loginAdmin": "Login admin",
+    "openHistory": "Obrir historial",
+    "historyTitle": "Historial"
+  },
+  "search": {
+    "label": "Buscador d'exposicions",
+    "placeholder": "Escriu almenys 3 lletres...",
+    "expoPrefix": "Expo",
+    "featuredImage": "Té imatge destacada",
+    "noResults": "No s'han trobat resultats.",
+    "typeExpo": "Expo",
+    "typeItem": "Item"
+  },
+  "carousel": {
+    "defaultExpo": "Expo",
+    "noImage": "Sense imatge"
+  },
+  "identification": {
+    "title": "Identificació",
+    "cameraError": "No s'ha pogut accedir a la càmera. Assegura't de donar permisos.",
+    "capture": "Capturar",
+    "repeat": "Repetir",
+    "analyzing": "Analitzant...",
+    "send": "Enviar",
+    "openCamera": "Obrir càmera",
+    "processingError": "Error al processar la identificació.",
+    "noResult": "Sense resultat"
+  },
+  "itemDetail": {
+    "title": "Detall de l'item",
+    "close": "Tancar",
+    "loading": "Carregant item...",
+    "error": "No s'ha pogut carregar aquest item.",
+    "noPublicImages": "Aquest item no té imatges públiques encara.",
+    "previous": "Anterior",
+    "next": "Següent",
+    "noDescription": "Aquest item encara no té descripció.",
+    "tags": "Etiquetes",
+    "noTags": "Sense etiquetes de moment."
+  },
+  "footer": {
+    "title": "Programa InnovaFP - Entitats financiadores"
+  },
+  "cookie": {
+    "title": "Cookies i seguiment local",
+    "description": "Fem servir emmagatzematge local sense caducitat per guardar l'historial dels intents de MarIA (foto enviada + resposta IA + item_id).",
+    "accept": "Acceptar",
+    "reject": "Rebutjar"
+  },
+  "history": {
+    "badge": "Historial de MarIA",
+    "title": "Últims intents guardats",
+    "close": "Tancar",
+    "emptyTitle": "No hi ha historial encara",
+    "emptyDescription": "Quan enviïs una foto a MarIA, apareixerà aquí amb la imatge i la resposta.",
+    "intentAlt": "Intent MarIA",
+    "expoWithoutName": "Expo sense nom",
+    "itemId": "Item ID",
+    "responseLabel": "Resposta",
+    "noResponse": "Sense resposta",
+    "noDate": "Sense data"
+  },
+  "login": {
+    "title": "Login admin",
+    "username": "Usuari",
+    "password": "Contrasenya",
+    "loading": "Entrant...",
+    "submit": "Entrar",
+    "errors": {
+      "noToken": "No s'ha rebut token d'accés",
+      "invalidCredentials": "Credencials incorrectes o API no disponible."
+    }
+  },
+  "admin": {
+    "loading": "Carregant...",
+    "dashboard": "Dashboard administrador",
+    "hello": "Hola",
+    "logout": "Logout",
+    "myExpos": "MyExpos",
+    "backToSummary": "Tornar al resum",
+    "summaryTitle": "Resum administrador",
+    "summaryLine1": "Tens {{exposCount}} exposicions assignades i {{itemsCount}} ítems en total.",
+    "summaryLine2": "Prem el botó MyExpos per veure i editar les teves exposicions.",
+    "editExpo": "Editar expo",
+    "status": "Estat",
+    "noDescription": "Sense descripció",
+    "previewItems": "Preview primers items",
+    "expoWithoutItems": "Aquesta expo encara no té ítems.",
+    "noAssignedExpos": "No tens exposicions assignades."
+  },
+  "expoDetail": {
+    "backToMyExpos": "Tornar a MyExpos",
+    "createNewItem": "Crear nou item",
+    "detailAlt": "Detall",
+    "editItem": "Editar item"
+  },
+  "createItem": {
+    "createTitle": "Crear nou item",
+    "uploadImagesTitle": "Pujar imatges",
+    "itemNameLabel": "Nom de l'item",
+    "itemNamePlaceholder": "Ex: Seat Leon 2023",
+    "descriptionLabel": "Descripció",
+    "descriptionPlaceholder": "Descriu l'item...",
+    "creating": "Creant...",
+    "uploadHint": "Puja les imatges de l'item. Selecciona una com a destacada (amb ⭐). Si no en selecciones cap, s'utilitzarà la primera.",
+    "saveItem": "Guardar item",
+    "errors": {
+      "requiredName": "El nom de l'item és obligatori",
+      "createFailed": "Error en crear l'item",
+      "requiredImages": "Has de pujar almenys una imatge",
+      "saveFailed": "Error en guardar l'item"
+    }
+  },
+  "expoEdit": {
+    "title": "Editar expo",
+    "nameLabel": "Nom",
+    "namePlaceholder": "Ex: IETI Car Show",
+    "descriptionLabel": "Descripció",
+    "descriptionPlaceholder": "Descriu l'expo...",
+    "errors": {
+      "requiredName": "El nom de l'expo és obligatori",
+      "saveFailed": "Error en guardar l'expo"
+    }
+  },
+  "itemEdit": {
+    "title": "Editar item",
+    "basicInfo": "Informació bàsica",
+    "nameLabel": "Nom",
+    "namePlaceholder": "Ex: Seat Leon 2023",
+    "descriptionLabel": "Descripció",
+    "descriptionPlaceholder": "Descriu l'item...",
+    "saveInfo": "Guardar informació",
+    "hideImageManager": "▼ Ocultar gestor d'imatges",
+    "showImageManager": "▶ Mostrar gestor d'imatges",
+    "errors": {
+      "requiredName": "El nom de l'item és obligatori",
+      "saveFailed": "Error en guardar l'item"
+    }
+  },
+  "multiImage": {
+    "title": "Imatges de l'item",
+    "dropzoneTitle": "Selecciona imatges o arrossega-les aquí",
+    "dropzoneSubtitle": "Múltiples fitxers permesos",
+    "markFeatured": "Marcar destacada",
+    "delete": "Eliminar",
+    "confirmDelete": "Eliminar aquesta imatge?",
+    "noImages": "Sense imatges"
+  }
+}
