@@ -274,29 +274,62 @@ def search(request):
 
 @api_view(['POST'])
 def start_expo_training(request, expo_id):
+    """
+    Endpoint para iniciar el proceso: Sube fotos e inicia entrenamiento.
+    """
     expo = get_object_or_404(Expo, id=expo_id)
     service = UXIAIService()
+    
+    if not service.token:
+        return Response({"error": "No se pudo autenticar con el servidor de IA"}, status=500)
 
-    # 1. Subir datos
-    service.upload_expo_dataset(expo)
-    #2. Empezar entrenamiento
-    service.start_training()
-
-    expo.current_train = "RUNNING"
+    # 1. Cambiamos estado a QUEUED (En cola)
+    expo.current_train = 'QUEUED'
     expo.save()
-    return Response({"status": RUNNING})
+
+    try:
+        # 2. Subimos las imágenes de los items
+        service.upload_expo_dataset(expo)
+        
+        # 3. Ordenamos empezar el entrenamiento
+        response = service.start_training()
+        
+        if response.ok:
+            expo.current_train = 'RUNNING'
+            expo.save()
+            return Response({"status": "RUNNING", "message": "Entrenamiento iniciado correctamente"})
+        else:
+            expo.current_train = 'ERROR'
+            expo.save()
+            return Response({"status": "ERROR", "message": "El servidor de IA rechazó la orden"}, status=400)
+
+    except Exception as e:
+        expo.current_train = 'ERROR'
+        expo.save()
+        return Response({"status": "ERROR", "message": str(e)}, status=500)
 
 @api_view(["GET"])
 def check_training_status(request, expo_id):
-    expo = get_object_or_404(Expo, id = expo_id)
+    """
+    Endpoint para que React pregunte: ¿Cómo va lo mío?
+    """
+    expo = get_object_or_404(Expo, id=expo_id)
     service = UXIAIService()
-
-    status_info = service.check_status()
-    nuevo_estado = status_info.get('status') # El que viene de la API
-
+    
+    # Consultamos al servidor de UXIA
+    info_ia = service.check_status()
+    nuevo_estado = info_ia.get('status', 'ERROR')
+    
+    # Actualizamos nuestra base de datos con lo que diga la IA
     expo.current_train = nuevo_estado
-    if nuevo_estado == "OK":
+    
+    # Si la IA dice OK, la expo pasa a estar DISPONIBLE para el público
+    if nuevo_estado == 'OK':
         expo.estat = Expo.Estat.DISPONIBLE
+    
     expo.save()
-
-    return Response({"status": nuevo_estado})
+    
+    return Response({
+        "status": nuevo_estado,
+        "expo_estat": expo.estat
+    })
