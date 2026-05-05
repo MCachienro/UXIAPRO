@@ -1,5 +1,5 @@
-import axios from 'axios';
 import { useState, useEffect } from 'react';
+import api from '../api';
 
 export const useExpos = (searchTerm) => {
     const [data, setData] = useState([]);
@@ -9,17 +9,23 @@ export const useExpos = (searchTerm) => {
         const fetchExpos = async () => {
             setStatus('loading');
             try {
-                const url = searchTerm ? `/api/expos/search?q=${encodeURIComponent(searchTerm)}` : '/api/expos';
-                const response = await axios.get(url);
-                setData(response.data)
+                const url = searchTerm
+                    ? `/expos/search?q=${encodeURIComponent(searchTerm)}`
+                    : '/expos';
+
+                const response = await api.get(url);
+
+                setData(response.data);
                 setStatus('ok');
-            } catch {
+            } catch (error) {
+                console.error('Error fetching expos:', error);
                 setStatus('error');
             }
         };
+
         const handler = setTimeout(fetchExpos, 300);
         return () => clearTimeout(handler);
     }, [searchTerm]);
 
-    return { expos: data, status};
+    return { expos: data, status };
 };

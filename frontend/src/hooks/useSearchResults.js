@@ -1,5 +1,5 @@
-import axios from 'axios';
 import { useEffect, useState } from 'react';
+import api from '../api';
 
 export const useSearchResults = (searchTerm) => {
     const [results, setResults] = useState([]);
@@ -17,10 +17,14 @@ export const useSearchResults = (searchTerm) => {
         const fetchResults = async () => {
             setStatus('loading');
             try {
-                const response = await axios.get(`/api/search?q=${encodeURIComponent(query)}`);
+                const response = await api.get(
+                    `/search?q=${encodeURIComponent(query)}`
+                );
+
                 setResults(response.data);
                 setStatus('ok');
-            } catch {
+            } catch (error) {
+                console.error('Error searching:', error);
                 setResults([]);
                 setStatus('error');
             }
