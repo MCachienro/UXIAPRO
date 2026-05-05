@@ -57,6 +57,7 @@ class Command(BaseCommand):
             nom="IETI CAR SHOW",
             defaults={
                 "descripcio": "Exposición oficial del centro IETI",
+                "lenguaje": "ES",
                 "propietari": admin_user,
             }
         )

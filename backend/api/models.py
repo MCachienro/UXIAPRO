@@ -15,9 +15,16 @@ class Expo(models.Model):
         DISPONIBLE = 'DISPONIBLE', 'Disponible'
         ACTUALITZABLE = 'ACTUALITZABLE', 'Actualitzable'
 
+    class Lenguaje(models.TextChoices):
+        ES = 'ES', 'Español'
+        CA = 'CA', 'Català'
+        EN = 'EN', 'English'
+        FR = 'FR', 'Français'
+
     nom = models.CharField(max_length=100)
     descripcio = models.TextField(blank=True, null=True)
     estat = models.CharField(max_length=20, choices=Estat.choices, default=Estat.INIT)
+    lenguaje = models.CharField(max_length=2, choices=Lenguaje.choices, default='ES')
     
     # --- CAMBIO PARA EL DASHBOARD ---
     # Relacionamos la Expo con un usuario (el admin/propietario)
