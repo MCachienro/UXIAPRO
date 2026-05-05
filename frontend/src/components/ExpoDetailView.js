@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import CreateItemModal from './CreateItemModal';
+import IATrainingControl from './ui/IATrainingControl';
 
 const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditItem, onItemsUpdated }) => {
     const { t } = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const refreshExpoData = () => {
+        if (onItemsUpdated) onItemsUpdated();
+        console.log("IA lista, refrescando datos de la expo...");
+    };
 
     return (
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 animate-in fade-in">
@@ -65,6 +70,8 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
                             >
                               ✏️
                             </button>
+
+                            <IATrainingControl expoId={expo.id} onTrainingComplete={refreshExpoData} />
                         </div>
                     );
                 })}
