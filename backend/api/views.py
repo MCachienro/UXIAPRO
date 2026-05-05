@@ -279,6 +279,7 @@ def start_expo_training(request, expo_id):
     """
     expo = get_object_or_404(Expo, id=expo_id)
     service = UXIAIService()
+    print(f"DEBUG: Token obtenido -> {service.token}")
     
     if not service.token:
         return Response({"error": "No se pudo autenticar con el servidor de IA"}, status=500)
