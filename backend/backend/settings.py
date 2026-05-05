@@ -183,5 +183,5 @@ SIMPLE_JWT = {
 
 # CONFIG ENTRENAR IA
 UXIA_API_URL = "https://uxiaweb1.ieti.site/"
-UXIA_USERNAME = "uxiaweb1"
+UXIA_USERNAME = "uxiawebX"
 UXIA_PASSWORD = "uxiaweb314"
