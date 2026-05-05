@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Intent, Expo, Item, Imatge
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from .services.ai_service import analizar_coche_con_ai
+from .services.ai_service import analizar_coche_con_ai, UXIAIService
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from .serializers import ExpoSerializer, ItemSerializer, ImatgeSerializer # Importas el archivo que acabas de crear
@@ -271,3 +271,32 @@ def search(request):
         })
     
     return Response(results)
+
+@api_view(['POST'])
+def start_expo_training(request, expo_id):
+    expo = get_object_or_404(Expo, id=expo_id)
+    service = UXIAIService()
+
+    # 1. Subir datos
+    service.upload_expo_dataset(expo)
+    #2. Empezar entrenamiento
+    service.start_training()
+
+    expo.current_train = "RUNNING"
+    expo.save()
+    return Response({"status": RUNNING})
+
+@api_view(["GET"])
+def check_training_status(request, expo_id):
+    expo = get_object_or_404(Expo, id = expo_id)
+    service = UXIAIService()
+
+    status_info = service.check_status()
+    nuevo_estado = status_info.get('status') # El que viene de la API
+
+    expo.current_train = nuevo_estado
+    if nuevo_estado == "OK":
+        expo.estat = Expo.Estat.DISPONIBLE
+    expo.save()
+
+    return Response({"status": nuevo_estado})

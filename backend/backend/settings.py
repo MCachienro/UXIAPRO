@@ -180,3 +180,8 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# CONFIG ENTRENAR IA
+UXIA_API_URL = "https://uxiaweb1.ieti.site/"
+UXIA_USERNAME = "uxiaweb1"
+UXIA_PASSWORD = "uxiaweb314"

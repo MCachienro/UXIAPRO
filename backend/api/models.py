@@ -21,6 +21,16 @@ class Expo(models.Model):
         EN = 'EN', 'English'
         FR = 'FR', 'Français'
 
+    # Añadimos los estados específicos para la IA según el requerimiento
+    class TrainStatus(models.TextChoices):
+        IDLE = 'IDLE', 'Idle'
+        QUEUED = 'QUEUED', 'Queued'
+        RUNNING = 'RUNNING', 'Running'
+        OK = 'OK', 'Ok'
+        ERROR = 'ERROR', 'Error'
+        CANCELLED = 'CANCELLED', 'Cancelled'
+        REPLACE = 'REPLACE', 'Replace'
+
     nom = models.CharField(max_length=100)
     descripcio = models.TextField(blank=True, null=True)
     estat = models.CharField(max_length=20, choices=Estat.choices, default=Estat.INIT)
@@ -34,6 +44,13 @@ class Expo(models.Model):
     data_creacio = models.DateTimeField(auto_now_add=True)
     data_actualitzacio = models.DateTimeField(auto_now=True)
 
+    # CORRECCIÓN AQUÍ: Usamos TrainStatus.choices
+    current_train = models.CharField(
+        max_length=20, 
+        choices=TrainStatus.choices, 
+        default=TrainStatus.IDLE
+    )
+    
     def __str__(self):
         return self.nom
 
