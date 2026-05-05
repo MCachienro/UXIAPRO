@@ -5,7 +5,7 @@ from ninja.errors import HttpError
 from ninja import File, Form
 from typing import List, Optional, Any
 from .models import Expo, Item, Imatge
-from django.core.files.uploadedfile import uploadedfile
+# from django.core.files.uploadedfile import Uploadedfile
 
 from .models import Expo, Item
 
