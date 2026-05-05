@@ -223,3 +223,51 @@ def current_user(request):
             'email': user.email,
         }
     )
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def search(request):
+    """
+    Endpoint de búsqueda global.
+    GET /api/search?q=query
+    
+    Busca en:
+    - Nombres de Expos
+    - Nombres de Items
+    
+    Retorna lista con resultados de ambas búsquedas.
+    """
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 3:
+        return Response([])
+    
+    # Buscar expos
+    expos = Expo.objects.filter(nom__icontains=query).values('id', 'nom', 'descripcio')[:5]
+    
+    # Buscar items
+    items = Item.objects.filter(nom__icontains=query).values('id', 'nom', 'expo__nom', 'expo_id')[:5]
+    
+    results = []
+    
+    # Agregar expos
+    for expo in expos:
+        results.append({
+            'tipus': 'EXPO',
+            'id': expo['id'],
+            'nom': expo['nom'],
+            'descripcio': expo['descripcio']
+        })
+    
+    # Agregar items
+    for item in items:
+        results.append({
+            'tipus': 'ITEM',
+            'id': item['id'],
+            'nom': item['nom'],
+            'expo_nom': item['expo__nom'],
+            'expo_id': item['expo_id']
+        })
+    
+    return Response(results)

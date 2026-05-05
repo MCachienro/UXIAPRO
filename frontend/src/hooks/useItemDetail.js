@@ -17,9 +17,14 @@ export const useItemDetail = (detailItemId) => {
             setDetailStatus('loading');
             try {
                 const response = await axios.get(`api/items/${detailItemId}`, {
-                    ignal: controller.signal,
+                    signal: controller.signal,
                 });
-                setDetailItem(response.data);
+                // Agregar lenguaje desde la expo asociada
+                const itemData = response.data;
+                setDetailItem({
+                    ...itemData,
+                    lang: itemData.expo_lang || 'ES'
+                });
                 setDetailStatus('ok');
             } catch (error) {
                 if (error.name !== 'CanceledError') {

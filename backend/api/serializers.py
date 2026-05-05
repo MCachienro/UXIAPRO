@@ -19,10 +19,11 @@ class ItemSerializer(serializers.ModelSerializer):
     # Esto te permite ver la imagen dentro del ítem
     imatge_destacada = ImatgeSerializer(read_only=True)
     imatges = ImatgeSerializer(many=True, read_only=True)
+    expo_lang = serializers.CharField(source='expo.lenguaje', read_only=True)
 
     class Meta:
         model = Item
-        fields = ['id', 'nom', 'descripcio', 'imatge_destacada', 'imatges', 'expo']
+        fields = ['id', 'nom', 'descripcio', 'imatge_destacada', 'imatges', 'expo', 'expo_lang']
 
 class ExpoSerializer(serializers.ModelSerializer):
     # Esto hace "la magia": incluye la lista de ítems dentro de la expo
@@ -30,4 +31,4 @@ class ExpoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Expo
-        fields = ['id', 'nom', 'descripcio', 'estat', 'items', 'propietari']
+        fields = ['id', 'nom', 'descripcio', 'estat', 'lenguaje', 'items', 'propietari']
