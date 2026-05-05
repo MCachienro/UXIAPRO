@@ -26,7 +26,9 @@ export default function TTSButton({ text, lang = 'ca'}) {
         if (!text) return;
 
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = langMap[lang] || 'ca-ES';
+        // Convertir código de idioma a minúsculas para el mapeo (ES -> es, etc)
+        const langCode = String(lang).toLowerCase();
+        utterance.lang = langMap[langCode] || 'ca-ES';
 
         utterance.onstart = () => setIsSpeaking(true);
         utterance.onend = () => setIsSpeaking(false);
