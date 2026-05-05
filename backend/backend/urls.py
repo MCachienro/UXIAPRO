@@ -63,6 +63,7 @@ urlpatterns = [
     
     # Otras rutas de la API Ninja o similares
     path('api/', uxia_api.urls),
+    path('', uxia_api.urls),
 ]
 
 if settings.DEBUG:
