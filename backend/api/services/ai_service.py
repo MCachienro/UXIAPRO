@@ -41,28 +41,34 @@ class UXIAIService:
         self.token = self._authenticate()
 
     def _authenticate(self):
-        if not self.username or not self.password:
-            return None
-        
+        url = f"{self.base_url}/auth/login"
+        # CORRECCIÓN: Añadimos "device" como pide tu ejemplo
+        payload = {
+            "username": self.username,
+            "password": self.password,
+            "device": "django-backend" 
+        }
         try:
-            payload = {"username": self.username, "password": self.password}
-            # Cambiamos a json=payload porque el error 422 anterior indicaba que esperaba JSON
-            response = requests.post(f"{self.base_url}/auth/login", json=payload, timeout=10)
-            response.raise_for_status()
-            
-            data = response.json()
-            # Algunas APIs devuelven 'token' en lugar de 'access_token', verifica esto
-            return data.get('access_token') or data.get('token')
+            response = requests.post(url, json=payload, timeout=10)
+            if response.status_code == 200:
+                return response.json().get('access_token')
+            print(f"Error Auth ({response.status_code}): {response.text}")
+            return None
         except Exception as e:
-            print(f"DEBUG: Fallo en Auth -> {e}")
+            print(f"Excepción en Auth: {e}")
             return None
     
     def upload_expo_dataset(self, expo):
         if not self.token: return False
-        
         headers = {"Authorization": f"Bearer {self.token}"}
-        items = expo.items.all()
+
+        # PASO 2 del ejemplo: Limpiar dataset anterior
+        try:
+            requests.delete(f"{self.base_url}/dataset/default", headers=headers, timeout=10)
+        except:
+            pass
         
+        items = expo.items.all()
         for item in items:
             # Importante: filter(es_publica=True) asumiendo que el campo existe
             for img in item.imatges.filter(es_publica=True):
@@ -71,19 +77,19 @@ class UXIAIService:
                         continue
 
                     with open(img.url_imatge.path, 'rb') as f:
-                        files = {'file': (os.path.basename(img.url_imatge.name), f, 'image/jpeg')}
+                        files = {'files': (os.path.basename(img.url_imatge.name), f, 'image/jpeg')}
+                        data = {'labels': item.nom}
+
                         # Enviamos el label como parte de 'data', no 'json', al usar archivos
-                        response = requests.post(
+                        requests.post(
                             f"{self.base_url}/dataset/images",
                             headers=headers,
                             files=files,
-                            data={'label': item.nom},
-                            timeout=20 # Darle tiempo para procesar la imagen
+                            data=data,
+                            timeout=20                        
                         )
-                        response.raise_for_status()
                 except Exception as e:
-                    print(f"Error subiendo imagen de {item.nom}: {e}")
-
+                    print(f"Error subiendo imagen: {e}")
     def start_training(self):
         if not self.token: return None
         headers = {"Authorization": f"Bearer {self.token}"}
