@@ -34,73 +34,98 @@ def analizar_coche_con_ai(ruta_imagen):
 
 class UXIAIService:
     def __init__(self):
-        # Asegúrate de que esta IP es la correcta (cambió de la .24 a la .10)
+        # Usamos la IP que sí hace ping y dio 200 en la shell
         self.base_url = "http://192.168.1.24:8765"
         self.username = getattr(settings, 'UXIA_USERNAME', None)
         self.password = getattr(settings, 'UXIA_PASSWORD', None)
         self.token = self._authenticate()
 
     def _authenticate(self):
+        """ Obtiene el token JWT usando el formato verificado en la shell """
         url = f"{self.base_url}/auth/login"
-        # CORRECCIÓN: Añadimos "device" como pide tu ejemplo
+        if not self.username or not self.password:
+            print("❌ Error: Credenciales de UXIA no configuradas en settings.py")
+            return None
+
         payload = {
             "username": self.username,
             "password": self.password,
             "device": "django-backend" 
         }
+        
         try:
+            # Usamos json=payload (confirmado que funciona con 200)
             response = requests.post(url, json=payload, timeout=10)
             if response.status_code == 200:
-                return response.json().get('access_token')
-            print(f"Error Auth ({response.status_code}): {response.text}")
+                token = response.json().get('access_token')
+                print(f"✅ Autenticación exitosa. Token obtenido.")
+                return token
+            
+            print(f"❌ Error Auth ({response.status_code}): {response.text}")
             return None
         except Exception as e:
-            print(f"Excepción en Auth: {e}")
+            print(f"❌ Excepción en Auth: {e}")
             return None
-    
+
     def upload_expo_dataset(self, expo):
-        if not self.token: return False
+        """ Sube imágenes limpiando el dataset previo como indica el ejemplo """
+        if not self.token: 
+            print("⚠️ Abortando subida: No hay token de autenticación.")
+            return False
+            
         headers = {"Authorization": f"Bearer {self.token}"}
 
-        # PASO 2 del ejemplo: Limpiar dataset anterior
+        # 1. Limpiar dataset anterior (Paso 2 del manual)
         try:
             requests.delete(f"{self.base_url}/dataset/default", headers=headers, timeout=10)
-        except:
-            pass
-        
+            print("🧹 Dataset previo limpiado correctamente.")
+        except Exception as e:
+            print(f"⚠️ Nota: No se pudo limpiar el dataset (puede que ya estuviera vacío): {e}")
+
+        # 2. Subir imágenes
         items = expo.items.all()
+        count = 0
         for item in items:
-            # Importante: filter(es_publica=True) asumiendo que el campo existe
             for img in item.imatges.filter(es_publica=True):
                 try:
-                    if not os.path.exists(img.url_imatge.path):
+                    if not img.url_imatge or not os.path.exists(img.url_imatge.path):
                         continue
 
                     with open(img.url_imatge.path, 'rb') as f:
+                        # La API espera 'files' y 'labels' en plural (multipart/form-data)
                         files = {'files': (os.path.basename(img.url_imatge.name), f, 'image/jpeg')}
                         data = {'labels': item.nom}
 
-                        # Enviamos el label como parte de 'data', no 'json', al usar archivos
-                        requests.post(
+                        res = requests.post(
                             f"{self.base_url}/dataset/images",
                             headers=headers,
                             files=files,
                             data=data,
-                            timeout=20                        
+                            timeout=30
                         )
+                        if res.status_code == 200:
+                            count += 1
                 except Exception as e:
-                    print(f"Error subiendo imagen: {e}")
+                    print(f"❌ Error subiendo imagen de {item.nom}: {e}")
+        
+        print(f"🚀 Subida finalizada: {count} imágenes cargadas.")
+        return True
+
     def start_training(self):
+        """ Inicia el entrenamiento """
         if not self.token: return None
         headers = {"Authorization": f"Bearer {self.token}"}
         try:
-            # Usar json={} vacío si la API es estricta con el método POST
-            return requests.post(f"{self.base_url}/train", headers=headers, json={}, timeout=30)
+            # Algunas APIs requieren un JSON aunque sea vacío en el POST
+            response = requests.post(f"{self.base_url}/train", headers=headers, json={}, timeout=30)
+            print(f"🧠 Respuesta entrenamiento: {response.status_code}")
+            return response
         except Exception as e:
-            print(f"Error al iniciar entrenamiento: {e}")
+            print(f"❌ Error al iniciar entrenamiento: {e}")
             return None
 
     def check_status(self):
+        """ Consulta el estado """
         if not self.token: return {"status": "ERROR", "message": "No token"}
         headers = {"Authorization": f"Bearer {self.token}"}
         try:
