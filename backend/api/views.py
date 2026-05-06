@@ -279,10 +279,17 @@ def start_expo_training(request, expo_id):
     """
     expo = get_object_or_404(Expo, id=expo_id)
     service = UXIAIService()
-    print(f"DEBUG: Token obtenido -> {service.token}")
+    
+    # DEBUG: Esto saldrá en tu terminal de Django
+    print(f"--- INICIANDO TRÁFICO CON IA ---")
+    print(f"Token: {service.token}")
     
     if not service.token:
-        return Response({"error": "No se pudo autenticar con el servidor de IA"}, status=500)
+        # Devolvemos 401 y un mensaje más descriptivo
+        return Response({
+            "error": "Error de autenticación",
+            "detail": "La IA no ha devuelto un token válido. Revisa las credenciales y la IP."
+        }, status=401)
 
     # 1. Cambiamos estado a QUEUED (En cola)
     expo.current_train = 'QUEUED'
