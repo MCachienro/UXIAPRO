@@ -35,7 +35,7 @@ def analizar_coche_con_ai(ruta_imagen):
 class UXIAIService:
     def __init__(self):
         # Asegúrate de que esta IP es la correcta (cambió de la .24 a la .10)
-        self.base_url = "http://192.168.56.10:8765"
+        self.base_url = "http://192.168.1.24:8765"
         self.username = getattr(settings, 'UXIA_USERNAME', None)
         self.password = getattr(settings, 'UXIA_PASSWORD', None)
         self.token = self._authenticate()
@@ -49,7 +49,7 @@ class UXIAIService:
             "device": "django-backend" 
         }
         try:
-            response = requests.post(url, json=payload, timeout=10)
+            response = requests.post(url, data=payload, timeout=10)
             if response.status_code == 200:
                 return response.json().get('access_token')
             print(f"Error Auth ({response.status_code}): {response.text}")
