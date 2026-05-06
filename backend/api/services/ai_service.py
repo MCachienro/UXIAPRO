@@ -48,8 +48,8 @@ class UXIAIService:
             return None
 
         payload = {
-            "username": self.username,
-            "password": self.password,
+            "username": "uxiaweb1",
+            "password": "uxiaweb314",
             "device": "django-backend" 
         }
         
