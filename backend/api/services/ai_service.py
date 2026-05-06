@@ -34,7 +34,7 @@ def analizar_coche_con_ai(ruta_imagen):
 
 class UXIAIService:
     def __init__(self):
-        self.base_url = "http://192.168.1.24:8765"
+        self.base_url = "http://192.168.56.10:8765"
         self.username = getattr(settings, 'UXIA_USERNAME', None)
         self.password = getattr(settings, 'UXIA_PASSWORD', None)
         self.token = self._authenticate()
