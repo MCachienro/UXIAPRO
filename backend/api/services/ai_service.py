@@ -51,7 +51,7 @@ class UXIAIService:
                 "password": self.password
             }
             # Enviamos como data (form-encoded) según los ejemplos anteriores
-            response = requests.post(f"{self.base_url}/auth/login", data=payload)
+            response = requests.post(f"{self.base_url}/auth/login", json=payload)
             response.raise_for_status()
             return response.json().get('access_token')
         except Exception as e:
