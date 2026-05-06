@@ -49,7 +49,7 @@ class UXIAIService:
             "device": "django-backend" 
         }
         try:
-            response = requests.post(url, data=payload, timeout=10)
+            response = requests.post(url, json=payload, timeout=10)
             if response.status_code == 200:
                 return response.json().get('access_token')
             print(f"Error Auth ({response.status_code}): {response.text}")
