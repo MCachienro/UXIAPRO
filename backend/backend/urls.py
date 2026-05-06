@@ -55,8 +55,8 @@ urlpatterns = [
 
     # --- ENTRENAMIENTO IA (UXIA) ---
     # Eliminamos el prefijo 'views.' porque ya importamos las funciones arriba
-    path('expos/<int:expo_id>/train/', start_expo_training, name='start-train'),
-    path('expos/<int:expo_id>/status/', check_training_status, name='check-status'),
+    path('expos/<int:expo_id>/train/', start_expo_training, name='start_train'),
+    path('expos/<int:expo_id>/status/', check_training_status, name='check_status'),
     
     # ViewSets (CRUD de Expos e Items)    
     path('api/rest/', include(router.urls)), 
