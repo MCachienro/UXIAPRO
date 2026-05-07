@@ -57,9 +57,9 @@ class UXIAIService:
             # Usamos json=payload (confirmado que funciona con 200)
             response = requests.post(url, json=payload, timeout=10)
             if response.status_code == 200:
-                token = response.json().get('access_token')
-                print(f"✅ Autenticación exitosa. Token obtenido.")
-                return token
+                json_data = response.json()
+                print(f"DEBUG: JSON recibido de la IA -> {json_data}") # <--- ESTO ES CLAVE
+                return json_data.get('access_token')
             
             print(f"❌ Error Auth ({response.status_code}): {response.text}")
             return None

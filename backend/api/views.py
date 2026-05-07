@@ -281,10 +281,10 @@ def start_expo_training(request, expo_id):
     service = UXIAIService()
     
     # DEBUG: Esto saldrá en tu terminal de Django
-    print(f"--- INICIANDO TRÁFICO CON IA ---")
+    print(f"--- INICIANDO TRAFICO CON IA ---")
     print(f"Token: {service.token}")
     
-    if not service.token:
+    if service.token is None:
         # Devolvemos 401 y un mensaje más descriptivo
         return Response({
             "error": "Error de autenticación",
