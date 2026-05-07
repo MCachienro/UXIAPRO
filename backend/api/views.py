@@ -14,6 +14,7 @@ import base64
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 MIN_CLASSIFY_CONFIDENCE = 0.75
+MIN_CLASSIFY_STABILITY = 0.67
 
 
 
@@ -148,10 +149,11 @@ def classify_item_id(request):
     label = classification.get('label')
     confidence_value = _parse_confidence(classification.get('confidence'))
     has_confidence = confidence_value > 0
+    stability = _parse_confidence(classification.get('stability'))
 
     matched_item = None
     # Only trust a match if confidence is high enough when UXIA provides it.
-    if label and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE):
+    if label and stability >= MIN_CLASSIFY_STABILITY and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE):
         matched_item = _find_item_for_label(expo, label)
 
     if matched_item:
@@ -176,7 +178,12 @@ def classify_item_id(request):
     intent.resultat_identificacio = label or 'Sin coincidencia clara'
     intent.save(update_fields=['resultat_identificacio'])
 
-    if has_confidence and confidence_value < MIN_CLASSIFY_CONFIDENCE:
+    if stability < MIN_CLASSIFY_STABILITY:
+        message = (
+            f"Predicción inestable ({stability:.2f}). "
+            "La IA no mantiene la misma clase en varios intentos."
+        )
+    elif has_confidence and confidence_value < MIN_CLASSIFY_CONFIDENCE:
         message = (
             f"Predicción con baja confianza ({confidence_value:.2f}). "
             "No se devuelve match automático."
@@ -195,6 +202,7 @@ def classify_item_id(request):
             'intent_id': intent.id,
             'item_id': None,
             'confidence': confidence_value,
+            'stability': stability,
             'label': label,
             'photo_url': request.build_absolute_uri(intent.url_foto_enviada.url),
         },
@@ -247,9 +255,10 @@ def classify_item_id_b64(request):
     label = classification.get('label')
     confidence_value = _parse_confidence(classification.get('confidence'))
     has_confidence = confidence_value > 0
+    stability = _parse_confidence(classification.get('stability'))
 
     matched_item = None
-    if label and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE):
+    if label and stability >= MIN_CLASSIFY_STABILITY and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE):
         matched_item = _find_item_for_label(expo, label)
 
     if matched_item:
@@ -261,7 +270,12 @@ def classify_item_id_b64(request):
     intent.resultat_identificacio = label or 'Sin coincidencia clara'
     intent.save(update_fields=['resultat_identificacio'])
 
-    if has_confidence and confidence_value < MIN_CLASSIFY_CONFIDENCE:
+    if stability < MIN_CLASSIFY_STABILITY:
+        message = (
+            f"Predicción inestable ({stability:.2f}). "
+            "La IA no mantiene la misma clase en varios intentos."
+        )
+    elif has_confidence and confidence_value < MIN_CLASSIFY_CONFIDENCE:
         message = (
             f"Predicción con baja confianza ({confidence_value:.2f}). "
             "No se devuelve match automático."
@@ -269,7 +283,7 @@ def classify_item_id_b64(request):
     else:
         message = 'No se encontró un Item con ese nombre.'
 
-    return Response({'match': False, 'message': message, 'intent_id': intent.id, 'label': label, 'confidence': confidence_value}, status=status.HTTP_200_OK)
+    return Response({'match': False, 'message': message, 'intent_id': intent.id, 'label': label, 'confidence': confidence_value, 'stability': stability}, status=status.HTTP_200_OK)
 
 class ExpoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]

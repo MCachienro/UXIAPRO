@@ -3,6 +3,7 @@ from django.conf import settings
 import requests
 import os
 from typing import Any, Dict, Optional
+from collections import Counter
 
 def analizar_coche_con_ai(ruta_imagen):
     """
@@ -155,8 +156,24 @@ class UXIAIService:
             timeout=30,
         )
 
+    def _extract_label_and_confidence(self, payload: Dict[str, Any]):
+        label = (
+            payload.get('label')
+            or payload.get('name')
+            or payload.get('class')
+            or payload.get('prediction')
+        )
+        confidence = payload.get('confidence') or payload.get('score') or payload.get('probability') or 0
+
+        if not label and isinstance(payload.get('result'), dict):
+            nested = payload['result']
+            label = nested.get('label') or nested.get('name')
+            confidence = nested.get('confidence') or nested.get('score') or nested.get('probability') or confidence
+
+        return label, confidence
+
     def classify_image(self, image_file):
-        """Clasifica una imagen usando el servidor UXIA y devuelve el payload normalizado."""
+        """Clasifica una imagen usando UXIA con consenso para reducir resultados inestables."""
         if not self.token:
             return {"ok": False, "message": "No token"}
 
@@ -179,23 +196,38 @@ class UXIAIService:
 
                 if response.ok:
                     payload: Dict[str, Any] = response.json() if response.content else {}
-                    label = (
-                        payload.get('label')
-                        or payload.get('name')
-                        or payload.get('class')
-                        or payload.get('prediction')
-                    )
-                    confidence = payload.get('confidence') or payload.get('score') or payload.get('probability') or 0
 
-                    if not label and isinstance(payload.get('result'), dict):
-                        nested = payload['result']
-                        label = nested.get('label') or nested.get('name')
-                        confidence = nested.get('confidence') or nested.get('score') or nested.get('probability') or confidence
+                    # First response + two extra attempts to reduce model jitter.
+                    responses = [payload]
+                    for _ in range(2):
+                        extra_response = self._post_classification_request(image_file, endpoint)
+                        if extra_response.ok and extra_response.content:
+                            responses.append(extra_response.json())
+
+                    extracted = [self._extract_label_and_confidence(p) for p in responses]
+                    labels = [label for label, _ in extracted if label]
+                    confidences = []
+                    for _, confidence in extracted:
+                        try:
+                            confidences.append(float(confidence))
+                        except (TypeError, ValueError):
+                            continue
+
+                    if labels:
+                        counts = Counter(labels)
+                        selected_label, selected_count = counts.most_common(1)[0]
+                        stability = selected_count / len(responses)
+                    else:
+                        selected_label = None
+                        stability = 0.0
+
+                    selected_confidence = max(confidences) if confidences else 0
 
                     return {
                         "ok": True,
-                        "label": label,
-                        "confidence": confidence,
+                        "label": selected_label,
+                        "confidence": selected_confidence,
+                        "stability": stability,
                         "raw": payload,
                         "status_code": response.status_code,
                     }
