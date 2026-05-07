@@ -13,6 +13,8 @@ import unicodedata
 import base64
 from django.core.files.uploadedfile import SimpleUploadedFile
 
+MIN_CLASSIFY_CONFIDENCE = 0.75
+
 
 
 def _guess_item_id_from_description(expo, descripcion):
@@ -45,12 +47,16 @@ def _find_item_for_label(expo, label):
         if item_label == normalized_label:
             return item
 
-    for item in items:
-        item_label = _normalize_label(item.nom)
-        if normalized_label in item_label or item_label in normalized_label:
-            return item
-
     return None
+
+
+def _parse_confidence(raw_value):
+    if isinstance(raw_value, (int, float, str)):
+        try:
+            return float(raw_value)
+        except (TypeError, ValueError):
+            return 0.0
+    return 0.0
 
 @csrf_exempt
 def procesar_identificacion(request):
@@ -140,14 +146,12 @@ def classify_item_id(request):
         )
 
     label = classification.get('label')
-    confidence = classification.get('confidence') or 0
-    confidence_value = float(confidence) if isinstance(confidence, (int, float, str)) else 0
+    confidence_value = _parse_confidence(classification.get('confidence'))
+    has_confidence = confidence_value > 0
 
     matched_item = None
-    # Intent: try to map the predicted label to an Item in the Expo even if
-    # the classifier does not provide a high confidence. UXIA may return
-    # 'prediction' instead of 'label' and often no confidence value.
-    if label:
+    # Only trust a match if confidence is high enough when UXIA provides it.
+    if label and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE):
         matched_item = _find_item_for_label(expo, label)
 
     if matched_item:
@@ -172,7 +176,12 @@ def classify_item_id(request):
     intent.resultat_identificacio = label or 'Sin coincidencia clara'
     intent.save(update_fields=['resultat_identificacio'])
 
-    if label:
+    if has_confidence and confidence_value < MIN_CLASSIFY_CONFIDENCE:
+        message = (
+            f"Predicción con baja confianza ({confidence_value:.2f}). "
+            "No se devuelve match automático."
+        )
+    elif label:
         message = (
             f"La IA ha reconocido {label}, pero no existe un item coincidente en esta expo."
         )
@@ -236,22 +245,31 @@ def classify_item_id_b64(request):
         return Response({'match': False, 'message': classification.get('message') or 'No se ha podido clasificar la imagen.', 'intent_id': intent.id}, status=status.HTTP_200_OK)
 
     label = classification.get('label')
-    confidence = classification.get('confidence') or 0
+    confidence_value = _parse_confidence(classification.get('confidence'))
+    has_confidence = confidence_value > 0
 
     matched_item = None
-    if label:
+    if label and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE):
         matched_item = _find_item_for_label(expo, label)
 
     if matched_item:
         intent.item_identificat = matched_item
         intent.resultat_identificacio = label or matched_item.nom
         intent.save()
-        return Response({'match': True, 'message': f"Item identificado: {matched_item.nom}", 'intent_id': intent.id, 'item_id': matched_item.id, 'confidence': float(confidence), 'label': label, 'item': ItemSerializer(matched_item, context={'request': request}).data}, status=status.HTTP_200_OK)
+        return Response({'match': True, 'message': f"Item identificado: {matched_item.nom}", 'intent_id': intent.id, 'item_id': matched_item.id, 'confidence': confidence_value, 'label': label, 'item': ItemSerializer(matched_item, context={'request': request}).data}, status=status.HTTP_200_OK)
 
     intent.resultat_identificacio = label or 'Sin coincidencia clara'
     intent.save(update_fields=['resultat_identificacio'])
 
-    return Response({'match': False, 'message': 'No se encontró un Item con ese nombre.', 'intent_id': intent.id, 'label': label}, status=status.HTTP_200_OK)
+    if has_confidence and confidence_value < MIN_CLASSIFY_CONFIDENCE:
+        message = (
+            f"Predicción con baja confianza ({confidence_value:.2f}). "
+            "No se devuelve match automático."
+        )
+    else:
+        message = 'No se encontró un Item con ese nombre.'
+
+    return Response({'match': False, 'message': message, 'intent_id': intent.id, 'label': label, 'confidence': confidence_value}, status=status.HTTP_200_OK)
 
 class ExpoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
