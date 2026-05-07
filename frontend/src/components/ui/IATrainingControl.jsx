@@ -47,13 +47,15 @@ const IATrainingControl = ({ expoId, initialStatus, onStatusChange }) => {
 
     const handleStartTraining = async () => {
         setLoading(true);
+	const token = localStorage.getItem('token');	
+
         try {
             const response = await fetch(`/api/expos/${expoId}/train/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     // Añade aquí tu token de autenticación si es necesario
-                    'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                    'Authorization': `Bearer ${token}` 
                 }
             });
 
