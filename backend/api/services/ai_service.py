@@ -58,18 +58,13 @@ class UXIAIService:
             response = requests.post(url, json=payload, timeout=10)
             if response.status_code == 200:
                 json_data = response.json()
-                    # CORRECCIÓN: Usamos 'token' en lugar de 'access_token'
-                    token_valor = json_data.get('token') 
-                    
-                    if token_valor:
-                        print(f"✅ Token extraído correctamente")
-                        return token_valor
-                    else:
-                        print(f"❌ El JSON no contenía la clave 'token': {json_data}")
-                        return None
+                print(f"DEBUG: JSON recibido de la IA -> {json_data}") # <--- ESTO ES CLAVE
+                return json_data.get('token')
+            
+            print(f"❌ Error Auth ({response.status_code}): {response.text}")
             return None
         except Exception as e:
-            print(f"❌ Error en la llamada: {e}")
+            print(f"❌ Excepción en Auth: {e}")
             return None
 
     def upload_expo_dataset(self, expo):
