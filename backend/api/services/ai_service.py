@@ -179,7 +179,12 @@ class UXIAIService:
 
                 if response.ok:
                     payload: Dict[str, Any] = response.json() if response.content else {}
-                    label = payload.get('label') or payload.get('name') or payload.get('class')
+                    label = (
+                        payload.get('label')
+                        or payload.get('name')
+                        or payload.get('class')
+                        or payload.get('prediction')
+                    )
                     confidence = payload.get('confidence') or payload.get('score') or payload.get('probability') or 0
 
                     if not label and isinstance(payload.get('result'), dict):

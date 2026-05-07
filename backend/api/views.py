@@ -142,7 +142,10 @@ def classify_item_id(request):
     confidence_value = float(confidence) if isinstance(confidence, (int, float, str)) else 0
 
     matched_item = None
-    if label and confidence_value >= 0.6:
+    # Intent: try to map the predicted label to an Item in the Expo even if
+    # the classifier does not provide a high confidence. UXIA may return
+    # 'prediction' instead of 'label' and often no confidence value.
+    if label:
         matched_item = _find_item_for_label(expo, label)
 
     if matched_item:
