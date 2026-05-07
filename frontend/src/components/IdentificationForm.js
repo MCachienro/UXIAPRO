@@ -20,6 +20,8 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const MAX_CAPTURE_WIDTH = 1280;
+  const MAX_CAPTURE_HEIGHT = 1280;
 
   // 1. Limpieza al desmontar el componente
   useEffect(() => {
@@ -83,8 +85,15 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
     const canvas = canvasRef.current;
     if (!video || !canvas || video.videoWidth === 0) return;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const scale = Math.min(
+      MAX_CAPTURE_WIDTH / video.videoWidth,
+      MAX_CAPTURE_HEIGHT / video.videoHeight,
+      1,
+    );
+
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -101,7 +110,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       reader.readAsDataURL(blob);
 
       stopCamera();
-    }, 'image/jpeg', 0.9);
+    }, 'image/jpeg', 0.75);
   };
 
   const handleIdentify = async () => {
