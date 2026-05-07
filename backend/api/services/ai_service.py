@@ -9,6 +9,11 @@ def analizar_coche_con_ai(ruta_imagen):
     """
     # Construimos la ruta absoluta real del archivo
     ruta_absoluta = os.path.join(settings.MEDIA_ROOT, ruta_imagen)
+    print(f"DEBUG OLLAMA: Buscando imagen en -> {ruta_absoluta}")
+
+    if not os.path.exists(ruta_absoluta):
+        print(f"❌ ERROR: El archivo no existe en esa ruta")
+        return "Error: Archivo de imagen no encontrado en el servidor."
     
     client = ollama.Client(host='http://192.168.1.24:11434')
     
