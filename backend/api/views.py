@@ -11,8 +11,7 @@ from rest_framework.decorators import action
 from .serializers import ExpoSerializer, ItemSerializer, ImatgeSerializer # Importas el archivo que acabas de crear
 import unicodedata
 import base64
-import io
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 
 
@@ -214,25 +213,22 @@ def classify_item_id_b64(request):
 
     expo = get_object_or_404(Expo, id=expo_id)
 
-    # create an in-memory file-like object with a name attribute
-    bio = io.BytesIO(decoded)
-    bio.name = 'upload.jpg'
-    bio.content_type = 'image/jpeg'
+    uploaded_file = SimpleUploadedFile('upload.jpg', decoded, content_type='image/jpeg')
 
     intent = Intent.objects.create(
         usuari=request.user if request.user.is_authenticated else None,
         expo=expo,
+        url_foto_enviada=uploaded_file,
     )
 
-    # attach the file to the intent.url_foto_enviada field if desired
-    # but for classification we can call the service directly
     service = UXIAIService()
     if not service.token:
         intent.resultat_identificacio = 'Error de autenticación con UXIA'
         intent.save(update_fields=['resultat_identificacio'])
         return Response({'match': False, 'message': 'No se ha podido autenticar con el servicio de clasificación.', 'intent_id': intent.id}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    classification = service.classify_image(bio)
+    uploaded_file.seek(0)
+    classification = service.classify_image(uploaded_file)
 
     if not classification.get('ok'):
         intent.resultat_identificacio = classification.get('message') or 'Error en la clasificación'
