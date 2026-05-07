@@ -159,7 +159,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
   };
 
   return (
-    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-5">
       <div className="flex flex-col gap-1">
         <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-100">{t('identification.title')}</h2>
         {selectedExpoName && (
@@ -170,35 +170,41 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       </div>
 
       {cameraActive ? (
-        <div className="relative mt-3 min-h-[320px] overflow-hidden rounded-xl bg-black aspect-video">
+        <div className="relative mt-3 overflow-hidden rounded-2xl bg-black aspect-[3/4] min-h-[360px] sm:aspect-video sm:min-h-[320px] md:min-h-[420px]">
           <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-            <button onClick={capturePhoto} className="rounded-full bg-white px-6 py-2 font-bold shadow-lg dark:bg-slate-100">{t('identification.capture')}</button>
-            <button onClick={resetCamera} className="rounded-full bg-red-500 px-4 py-2 font-bold text-white shadow-lg">✕</button>
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent p-3 sm:p-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-center sm:gap-3">
+              <button onClick={capturePhoto} className="w-full rounded-full bg-white px-5 py-3 text-sm font-bold shadow-lg transition hover:bg-slate-100 dark:bg-slate-100 sm:w-auto sm:px-6">
+                {t('identification.capture')}
+              </button>
+              <button onClick={resetCamera} className="w-full rounded-full bg-red-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-red-600 sm:w-auto">
+                ✕
+              </button>
+            </div>
           </div>
         </div>
       ) : (
-        <div className="mt-3 flex flex-col gap-3">
+        <div className="mt-3 flex flex-col gap-3 sm:gap-4">
           {cameraError && <p className="text-sm font-bold text-red-600 dark:text-red-400">{cameraError}</p>}
           
           {previewUrl ? (
             <>
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
-                <img src={previewUrl} className="w-full max-h-[60vh] aspect-video object-contain bg-black" alt="Preview" />
+                <img src={previewUrl} className="w-full max-h-[60vh] aspect-[3/4] object-contain bg-black sm:aspect-video" alt="Preview" />
               </div>
-              <div className="flex gap-2">
-                <button onClick={startCamera} className="flex-1 rounded-lg border border-slate-300 p-2 font-bold text-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">{t('identification.repeat')}</button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button onClick={startCamera} className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">{t('identification.repeat')}</button>
                 <button 
                   onClick={handleIdentify} 
                   disabled={isIdentifying} 
-                  className="flex-1 rounded-lg bg-blue-600 p-2 font-bold text-white hover:bg-blue-700 transition"
+                  className="flex-1 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {isIdentifying ? t('identification.analyzing') : t('identification.classify')}
+                  {isIdentifying ? t('identification.analyzing') : t('identification.send')}
                 </button>
               </div>
             </>
           ) : (
-            <button onClick={startCamera} className="w-full rounded-xl border-2 border-dashed py-6 font-bold text-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/70">
+            <button onClick={startCamera} className="w-full rounded-2xl border-2 border-dashed py-6 text-base font-bold text-slate-400 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800/70 sm:py-7">
               {t('identification.openCamera')}
             </button>
           )}
