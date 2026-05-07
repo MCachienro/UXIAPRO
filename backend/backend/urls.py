@@ -24,6 +24,7 @@ from api.api import api as uxia_api
 from api.views import (
     procesar_identificacion, 
     classify_item_id,
+    classify_item_id_b64,
     ExpoViewSet, 
     ItemViewSet, 
     current_user, 
