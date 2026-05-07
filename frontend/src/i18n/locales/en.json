@@ -29,15 +29,21 @@
     "noImage": "No image"
   },
   "identification": {
-    "title": "Identification",
+    "title": "ITEM ID",
+    "selectedExpo": "Selected expo",
     "cameraError": "Could not access the camera. Make sure permissions are enabled.",
     "capture": "Capture",
     "repeat": "Retake",
     "analyzing": "Analyzing...",
+    "classify": "Classify",
     "send": "Send",
     "openCamera": "Open camera",
     "processingError": "Error processing identification.",
-    "noResult": "No result"
+    "noResult": "No result",
+    "matchFound": "Match found",
+    "noMatch": "No clear match found.",
+    "confidence": "Confidence",
+    "viewDetails": "View details"
   },
   "itemDetail": {
     "title": "Item detail",

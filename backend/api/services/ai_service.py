@@ -2,6 +2,7 @@ import ollama
 from django.conf import settings
 import requests
 import os
+from typing import Any, Dict, Optional
 
 def analizar_coche_con_ai(ruta_imagen):
     """
@@ -40,7 +41,7 @@ def analizar_coche_con_ai(ruta_imagen):
 class UXIAIService:
     def __init__(self):
         # Usamos la IP que sí hace ping y dio 200 en la shell
-        self.base_url = "http://192.168.1.24:8765"
+        self.base_url = getattr(settings, 'UXIA_CLASSIFIER_URL', 'http://192.168.1.24:8765')
         self.username = getattr(settings, 'UXIA_USERNAME', None)
         self.password = getattr(settings, 'UXIA_PASSWORD', None)
         self.token = self._authenticate()
@@ -53,9 +54,9 @@ class UXIAIService:
             return None
 
         payload = {
-            "username": "uxiaweb1",
-            "password": "uxiaweb314",
-            "device": "django-backend" 
+            "username": self.username,
+            "password": self.password,
+            "device": "django-backend"
         }
         
         try:
@@ -138,3 +139,68 @@ class UXIAIService:
             return response.json()
         except Exception as e:
             return {"status": "ERROR", "message": str(e)}
+
+    def _post_classification_request(self, image_file, endpoint: str):
+        headers = {"Authorization": f"Bearer {self.token}"}
+        if hasattr(image_file, 'seek'):
+            image_file.seek(0)
+
+        filename = getattr(image_file, 'name', 'image.jpg')
+        content_type = getattr(image_file, 'content_type', 'image/jpeg') or 'image/jpeg'
+        files = {'image': (filename, image_file, content_type)}
+        return requests.post(
+            f"{self.base_url}{endpoint}",
+            headers=headers,
+            files=files,
+            timeout=30,
+        )
+
+    def classify_image(self, image_file):
+        """Clasifica una imagen usando el servidor UXIA y devuelve el payload normalizado."""
+        if not self.token:
+            return {"ok": False, "message": "No token"}
+
+        endpoints = ["/classify", "/predict"]
+        last_error: Optional[str] = None
+
+        for endpoint in endpoints:
+            try:
+                response = self._post_classification_request(image_file, endpoint)
+
+                if response.status_code == 404:
+                    continue
+
+                if response.status_code in (401, 403):
+                    return {
+                        "ok": False,
+                        "message": "La API de clasificación rechazó la petición de autenticación.",
+                        "status_code": response.status_code,
+                    }
+
+                if response.ok:
+                    payload: Dict[str, Any] = response.json() if response.content else {}
+                    label = payload.get('label') or payload.get('name') or payload.get('class')
+                    confidence = payload.get('confidence') or payload.get('score') or payload.get('probability') or 0
+
+                    if not label and isinstance(payload.get('result'), dict):
+                        nested = payload['result']
+                        label = nested.get('label') or nested.get('name')
+                        confidence = nested.get('confidence') or nested.get('score') or nested.get('probability') or confidence
+
+                    return {
+                        "ok": True,
+                        "label": label,
+                        "confidence": confidence,
+                        "raw": payload,
+                        "status_code": response.status_code,
+                    }
+
+                last_error = f"{response.status_code}: {response.text}"
+
+            except Exception as exc:
+                last_error = str(exc)
+
+        return {
+            "ok": False,
+            "message": last_error or "No se pudo clasificar la imagen.",
+        }

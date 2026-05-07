@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
-export default function IdentificationForm({ selectedExpoId, selectedExpoName, onIntentTracked }) {
+export default function IdentificationForm({ selectedExpoId, selectedExpoName, onIntentTracked, onItemMatched }) {
   const { t } = useTranslation();
   const [idFile, setIdFile] = useState(null);
   const [aiResult, setAiResult] = useState(null);
+  const [matchedItem, setMatchedItem] = useState(null);
+  const [matchConfidence, setMatchConfidence] = useState(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState('');
@@ -51,6 +53,8 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
     setPreviewDataUrl('');
     setIdFile(null);
     setAiResult(null);
+    setMatchedItem(null);
+    setMatchConfidence(null);
   };
 
   const startCamera = async () => {
@@ -58,6 +62,8 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       setCameraError('');
       // Limpiamos estados previos
       setAiResult(null);
+      setMatchedItem(null);
+      setMatchConfidence(null);
       
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } },
@@ -102,27 +108,42 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
     if (!idFile || !selectedExpoId) return;
     setIsIdentifying(true);
     const formData = new FormData();
-    formData.append('foto', idFile);
+    formData.append('image', idFile);
     formData.append('expo_id', selectedExpoId);
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/identificar/`, formData);
-      const message = response.data.mensaje || t('identification.noResult');
-      setAiResult(message);
+      const response = await axios.post(`${API_BASE_URL}/classify/`, formData);
+      const payload = response.data || {};
+
+      if (payload.match && payload.item) {
+        setMatchedItem(payload.item);
+        setMatchConfidence(typeof payload.confidence === 'number' ? payload.confidence : null);
+        setAiResult(payload.message || t('identification.matchFound', { item: payload.item.nom }));
+
+        if (typeof onItemMatched === 'function') {
+          onItemMatched(payload.item.id);
+        }
+      } else {
+        setMatchedItem(null);
+        setMatchConfidence(null);
+        setAiResult(payload.message || t('identification.noResult'));
+      }
 
       if (typeof onIntentTracked === 'function') {
         onIntentTracked({
           expoId: Number(selectedExpoId),
           expoName: selectedExpoName || null,
-          intentId: response.data.intent_id || null,
-          itemId: response.data.item_id || null,
+          intentId: payload.intent_id || null,
+          itemId: payload.item_id || null,
           imageDataUrl: previewDataUrl || null,
-          photoUrl: response.data.photo_url || null,
-          responseText: message,
+          photoUrl: payload.photo_url || null,
+          responseText: payload.message || null,
         });
       }
     } catch (e) {
-      setAiResult(t('identification.processingError'));
+      setMatchedItem(null);
+      setMatchConfidence(null);
+      setAiResult(e?.response?.data?.message || t('identification.processingError'));
     } finally {
       setIsIdentifying(false);
     }
@@ -130,7 +151,14 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
 
   return (
     <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-100">{t('identification.title')}</h2>
+      <div className="flex flex-col gap-1">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-slate-800 dark:text-slate-100">{t('identification.title')}</h2>
+        {selectedExpoName && (
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            {t('identification.selectedExpo')}: {selectedExpoName}
+          </p>
+        )}
+      </div>
 
       {cameraActive ? (
         <div className="relative mt-3 min-h-[320px] overflow-hidden rounded-xl bg-black aspect-video">
@@ -156,7 +184,7 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
                   disabled={isIdentifying} 
                   className="flex-1 rounded-lg bg-blue-600 p-2 font-bold text-white hover:bg-blue-700 transition"
                 >
-                  {isIdentifying ? t('identification.analyzing') : t('identification.send')}
+                  {isIdentifying ? t('identification.analyzing') : t('identification.classify')}
                 </button>
               </div>
             </>
@@ -173,6 +201,38 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
       {aiResult && (
         <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
           <p className="text-sm text-slate-700 dark:text-slate-200">{aiResult}</p>
+        </div>
+      )}
+
+      {matchedItem && (
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-200">
+                {t('identification.matchFound')}
+              </p>
+              <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-slate-50">
+                {matchedItem.nom}
+              </h3>
+              <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">
+                {matchedItem.descripcio || t('itemDetail.noDescription')}
+              </p>
+              {typeof matchConfidence === 'number' && (
+                <p className="mt-2 text-xs font-semibold text-emerald-800 dark:text-emerald-200">
+                  {t('identification.confidence')}: {Math.round(matchConfidence * 100)}%
+                </p>
+              )}
+            </div>
+            {typeof onItemMatched === 'function' && (
+              <button
+                type="button"
+                onClick={() => onItemMatched(matchedItem.id)}
+                className="rounded-full border border-emerald-300 bg-white px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm transition hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-slate-900 dark:text-emerald-200 dark:hover:bg-slate-800"
+              >
+                {t('identification.viewDetails')}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </section>

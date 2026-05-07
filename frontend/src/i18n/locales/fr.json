@@ -29,15 +29,21 @@
     "noImage": "Pas d'image"
   },
   "identification": {
-    "title": "Identification",
+    "title": "ITEM ID",
+    "selectedExpo": "Expo sélectionnée",
     "cameraError": "Impossible d'accéder à la caméra. Vérifiez les autorisations.",
     "capture": "Capturer",
     "repeat": "Reprendre",
     "analyzing": "Analyse en cours...",
+    "classify": "Classer",
     "send": "Envoyer",
     "openCamera": "Ouvrir la caméra",
     "processingError": "Erreur lors du traitement de l'identification.",
-    "noResult": "Aucun résultat"
+    "noResult": "Aucun résultat",
+    "matchFound": "Correspondance trouvée",
+    "noMatch": "Aucune correspondance claire trouvée.",
+    "confidence": "Confiance",
+    "viewDetails": "Voir les détails"
   },
   "itemDetail": {
     "title": "Détail de l'item",
