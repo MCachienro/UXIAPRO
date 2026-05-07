@@ -113,7 +113,46 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
     }, 'image/jpeg', 0.75);
   };
 
-  const handleIdentify = async () => {
+  const handleItemDescription = async () => {
+    if (!idFile || !selectedExpoId) return;
+    setIsIdentifying(true);
+    const formData = new FormData();
+    formData.append('foto', idFile);
+    formData.append('expo_id', selectedExpoId);
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/item-description/`, formData);
+      const payload = response.data || {};
+
+      setMatchedItem(null);
+      setMatchConfidence(null);
+      setAiResult(payload.mensaje || payload.message || t('identification.noResult'));
+
+      if (typeof onIntentTracked === 'function') {
+        onIntentTracked({
+          expoId: Number(selectedExpoId),
+          expoName: selectedExpoName || null,
+          intentId: payload.intent_id || null,
+          itemId: payload.item_id || null,
+          imageDataUrl: previewDataUrl || null,
+          photoUrl: payload.photo_url || null,
+          responseText: payload.mensaje || payload.message || null,
+        });
+      }
+
+      if (payload.item_id && typeof onItemMatched === 'function') {
+        onItemMatched(payload.item_id);
+      }
+    } catch (e) {
+      setMatchedItem(null);
+      setMatchConfidence(null);
+      setAiResult(e?.response?.data?.message || e?.response?.data?.mensaje || t('identification.processingError'));
+    } finally {
+      setIsIdentifying(false);
+    }
+  };
+
+  const handleItemId = async () => {
     if (!idFile || !selectedExpoId) return;
     setIsIdentifying(true);
     const formData = new FormData();
@@ -192,14 +231,21 @@ export default function IdentificationForm({ selectedExpoId, selectedExpoName, o
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
                 <img src={previewUrl} className="w-full max-h-[60vh] aspect-[3/4] object-contain bg-black sm:aspect-video" alt="Preview" />
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button onClick={startCamera} className="flex-1 rounded-xl border border-slate-300 px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">{t('identification.repeat')}</button>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button onClick={startCamera} className="rounded-xl border border-slate-300 px-4 py-3 font-bold text-slate-800 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">{t('identification.repeat')}</button>
                 <button 
-                  onClick={handleIdentify} 
+                  onClick={handleItemDescription} 
                   disabled={isIdentifying} 
-                  className="flex-1 rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="rounded-xl bg-emerald-600 px-4 py-3 font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isIdentifying ? t('identification.analyzing') : t('identification.send')}
+                </button>
+                <button 
+                  onClick={handleItemId} 
+                  disabled={isIdentifying} 
+                  className="rounded-xl bg-blue-600 px-4 py-3 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70 sm:col-span-2"
+                >
+                  {isIdentifying ? t('identification.analyzing') : t('identification.classify')}
                 </button>
               </div>
             </>
