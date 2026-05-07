@@ -50,7 +50,7 @@ const IATrainingControl = ({ expoId, initialStatus, onStatusChange }) => {
                 } catch (error) {
                     console.error("Error consultant l'estat de la IA: ", error);
                 }
-            }, 5000); // Cada 5 segundos
+            }, 10000); // Cada 10 segundos
         }
 
         return () => {
