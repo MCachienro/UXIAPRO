@@ -56,9 +56,11 @@ urlpatterns = [
     path('api/item-description/', procesar_identificacion, name='item_description'),
     path('api/classify/', classify_item_id, name='item_classify'),
     path('api/classify_b64/', classify_item_id_b64, name='item_classify_b64'),
+    path('item-description/', procesar_identificacion, name='item_description_nomount'),
     path('identificar/', procesar_identificacion),
     path('classify/', classify_item_id),
     path('classify_b64/', classify_item_id_b64),
+    path('search/', search, name='search_nomount'),
 
     # --- ENTRENAMIENTO IA (UXIA) ---
     # Eliminamos el prefijo 'views.' porque ya importamos las funciones arriba
