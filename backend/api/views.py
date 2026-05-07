@@ -10,6 +10,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from .serializers import ExpoSerializer, ItemSerializer, ImatgeSerializer # Importas el archivo que acabas de crear
 import unicodedata
+import base64
+import io
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 
@@ -189,6 +192,70 @@ def classify_item_id(request):
         },
         status=status.HTTP_200_OK,
     )
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def classify_item_id_b64(request):
+    """
+    Alternative endpoint that accepts JSON with base64-encoded image.
+    Use when multipart/form-data uploads fail on the server.
+    Body: { "expo_id": 2, "image_b64": "<base64string>" }
+    """
+    expo_id = request.data.get('expo_id')
+    image_b64 = request.data.get('image_b64')
+
+    if not expo_id or not image_b64:
+        return Response({'match': False, 'message': 'faltan expo_id e image_b64'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        decoded = base64.b64decode(image_b64)
+    except Exception:
+        return Response({'match': False, 'message': 'imagen base64 inválida'}, status=status.HTTP_400_BAD_REQUEST)
+
+    expo = get_object_or_404(Expo, id=expo_id)
+
+    # create an in-memory file-like object with a name attribute
+    bio = io.BytesIO(decoded)
+    bio.name = 'upload.jpg'
+    bio.content_type = 'image/jpeg'
+
+    intent = Intent.objects.create(
+        usuari=request.user if request.user.is_authenticated else None,
+        expo=expo,
+    )
+
+    # attach the file to the intent.url_foto_enviada field if desired
+    # but for classification we can call the service directly
+    service = UXIAIService()
+    if not service.token:
+        intent.resultat_identificacio = 'Error de autenticación con UXIA'
+        intent.save(update_fields=['resultat_identificacio'])
+        return Response({'match': False, 'message': 'No se ha podido autenticar con el servicio de clasificación.', 'intent_id': intent.id}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    classification = service.classify_image(bio)
+
+    if not classification.get('ok'):
+        intent.resultat_identificacio = classification.get('message') or 'Error en la clasificación'
+        intent.save(update_fields=['resultat_identificacio'])
+        return Response({'match': False, 'message': classification.get('message') or 'No se ha podido clasificar la imagen.', 'intent_id': intent.id}, status=status.HTTP_200_OK)
+
+    label = classification.get('label')
+    confidence = classification.get('confidence') or 0
+
+    matched_item = None
+    if label:
+        matched_item = _find_item_for_label(expo, label)
+
+    if matched_item:
+        intent.item_identificat = matched_item
+        intent.resultat_identificacio = label or matched_item.nom
+        intent.save()
+        return Response({'match': True, 'message': f"Item identificado: {matched_item.nom}", 'intent_id': intent.id, 'item_id': matched_item.id, 'confidence': float(confidence), 'label': label, 'item': ItemSerializer(matched_item, context={'request': request}).data}, status=status.HTTP_200_OK)
+
+    intent.resultat_identificacio = label or 'Sin coincidencia clara'
+    intent.save(update_fields=['resultat_identificacio'])
+
+    return Response({'match': False, 'message': 'No se encontró un Item con ese nombre.', 'intent_id': intent.id, 'label': label}, status=status.HTTP_200_OK)
 
 class ExpoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
