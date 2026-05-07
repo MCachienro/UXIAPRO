@@ -13,8 +13,9 @@ import unicodedata
 import base64
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-MIN_CLASSIFY_CONFIDENCE = 0.75
-MIN_CLASSIFY_STABILITY = 0.67
+MIN_CLASSIFY_CONFIDENCE = 0.90
+MIN_CLASSIFY_STABILITY = 1.00
+REQUIRE_CLASSIFY_CONFIDENCE = True
 
 
 
@@ -153,7 +154,17 @@ def classify_item_id(request):
 
     matched_item = None
     # Only trust a match if confidence is high enough when UXIA provides it.
-    if label and stability >= MIN_CLASSIFY_STABILITY and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE):
+    can_match = (
+        label
+        and stability >= MIN_CLASSIFY_STABILITY
+        and (
+            (has_confidence and confidence_value >= MIN_CLASSIFY_CONFIDENCE)
+            if REQUIRE_CLASSIFY_CONFIDENCE
+            else (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE)
+        )
+    )
+
+    if can_match:
         matched_item = _find_item_for_label(expo, label)
 
     if matched_item:
@@ -178,7 +189,12 @@ def classify_item_id(request):
     intent.resultat_identificacio = label or 'Sin coincidencia clara'
     intent.save(update_fields=['resultat_identificacio'])
 
-    if stability < MIN_CLASSIFY_STABILITY:
+    if REQUIRE_CLASSIFY_CONFIDENCE and not has_confidence:
+        message = (
+            "El clasificador no devolvió confidence. "
+            "No se devuelve match automático para evitar falsos positivos."
+        )
+    elif stability < MIN_CLASSIFY_STABILITY:
         message = (
             f"Predicción inestable ({stability:.2f}). "
             "La IA no mantiene la misma clase en varios intentos."
@@ -258,7 +274,17 @@ def classify_item_id_b64(request):
     stability = _parse_confidence(classification.get('stability'))
 
     matched_item = None
-    if label and stability >= MIN_CLASSIFY_STABILITY and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE):
+    can_match = (
+        label
+        and stability >= MIN_CLASSIFY_STABILITY
+        and (
+            (has_confidence and confidence_value >= MIN_CLASSIFY_CONFIDENCE)
+            if REQUIRE_CLASSIFY_CONFIDENCE
+            else (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE)
+        )
+    )
+
+    if can_match:
         matched_item = _find_item_for_label(expo, label)
 
     if matched_item:
@@ -270,7 +296,12 @@ def classify_item_id_b64(request):
     intent.resultat_identificacio = label or 'Sin coincidencia clara'
     intent.save(update_fields=['resultat_identificacio'])
 
-    if stability < MIN_CLASSIFY_STABILITY:
+    if REQUIRE_CLASSIFY_CONFIDENCE and not has_confidence:
+        message = (
+            "El clasificador no devolvió confidence. "
+            "No se devuelve match automático para evitar falsos positivos."
+        )
+    elif stability < MIN_CLASSIFY_STABILITY:
         message = (
             f"Predicción inestable ({stability:.2f}). "
             "La IA no mantiene la misma clase en varios intentos."
