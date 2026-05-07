@@ -24,9 +24,22 @@ const IATrainingControl = ({ expoId, initialStatus, onStatusChange }) => {
         if (status === 'RUNNING' || status === 'QUEUED') {
             interval = setInterval(async () => {
                 try {
-                    const response = await fetch(`/api/expos/${expoId}/status/`);
-                    const data = await response.json();
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`/api/expos/${expoId}/status/`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // VITAL: Añadir el token aquí también
+                            'Authorization': `Bearer ${token}` 
+                        }
+                    });
 
+                    if (response.status === 401) {
+                        console.error("Sesión expirada o sin token en el status");
+                        return;
+                    }
+
+                    const data = await response.json();
                     setStatus(data.status);
 
                     // Si el estado cambia a OK o ERROR, paramos el reloj y avisamos al padre
@@ -47,7 +60,7 @@ const IATrainingControl = ({ expoId, initialStatus, onStatusChange }) => {
 
     const handleStartTraining = async () => {
         setLoading(true);
-	const token = localStorage.getItem('token');	
+	    const token = localStorage.getItem('token');	
 
         try {
             const response = await fetch(`/api/expos/${expoId}/train/`, {
