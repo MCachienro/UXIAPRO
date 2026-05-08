@@ -10,6 +10,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from .serializers import ExpoSerializer, ItemSerializer, ImatgeSerializer # Importas el archivo que acabas de crear
 import unicodedata
+import difflib
 import base64
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -32,9 +33,32 @@ def _guess_item_id_from_description(expo, descripcion):
 
 
 def _normalize_label(value):
-    normalized = unicodedata.normalize('NFKD', value or '')
+    """Normaliza una etiqueta eliminando acentos, guiones, sufijos de año
+    y retornando solo caracteres alfanuméricos en minúscula.
+    Ejemplos:
+    - 'Seat-Ibiza-2025' -> 'seatibiza'
+    - 'Opel Insignia' -> 'opelinsignia'
+    """
+    if not value:
+        return ''
+
+    # Unicode normalize y quitar diacríticos
+    normalized = unicodedata.normalize('NFKD', value)
     normalized = ''.join(char for char in normalized if not unicodedata.combining(char))
-    return ''.join(char.lower() for char in normalized if char.isalnum())
+
+    # Reemplazar guiones/underscore por espacios y quitar sufijos año (4 dígitos)
+    normalized = normalized.replace('-', ' ').replace('_', ' ')
+    # Remover años al final: ' ... 2025' -> ''
+    parts = normalized.split()
+    if parts and parts[-1].isdigit() and len(parts[-1]) == 4:
+        parts = parts[:-1]
+    normalized = ' '.join(parts)
+
+    # Mantener solo caracteres alfanuméricos y espacios
+    cleaned = ''.join(ch.lower() if ch.isalnum() or ch.isspace() else ' ' for ch in normalized)
+    # Compactar espacios y devolver sin espacios para comparación simple
+    tokens = [t for t in cleaned.split() if t]
+    return ''.join(tokens)
 
 
 def _find_item_for_label(expo, label):
@@ -44,10 +68,35 @@ def _find_item_for_label(expo, label):
 
     items = Item.objects.filter(expo=expo).only('id', 'nom').order_by('id')
 
+    # 1) Exact normalized match
     for item in items:
         item_label = _normalize_label(item.nom)
         if item_label == normalized_label:
             return item
+
+    # 2) Token containment: every token of the predicted label appears in item label
+    # (handles cases like 'seatibiza' vs 'seatibiza2025' or small format differences)
+    label_tokens = [t for t in unicodedata.normalize('NFKD', label).replace('-', ' ').replace('_', ' ').lower().split() if t]
+    if label_tokens:
+        for item in items:
+            item_tokens = [t for t in unicodedata.normalize('NFKD', item.nom).replace('-', ' ').replace('_', ' ').lower().split() if t]
+            if all(any(lt in it for it in item_tokens) for lt in label_tokens):
+                return item
+
+    # 3) Fuzzy matching as fallback
+    # Build list of normalized item labels -> map back to items
+    candidates = []
+    item_map = {}
+    for item in items:
+        il = _normalize_label(item.nom)
+        if il:
+            candidates.append(il)
+            item_map[il] = item
+
+    if candidates:
+        matches = difflib.get_close_matches(normalized_label, candidates, n=1, cutoff=0.75)
+        if matches:
+            return item_map.get(matches[0])
 
     return None
 
