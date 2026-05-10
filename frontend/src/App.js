@@ -123,6 +123,7 @@ function App() {
               selectedExpoId={selectedExpoId}
               selectedExpoName={selectedExpo?.nom || ''}
               onIntentTracked={saveIntent}
+              onItemMatched={(itemId) => setDetailItemId(itemId)}
             />
 
             {/* Carrusel de items */}

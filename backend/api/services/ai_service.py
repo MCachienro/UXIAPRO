@@ -2,6 +2,8 @@ import ollama
 from django.conf import settings
 import requests
 import os
+from typing import Any, Dict, Optional
+from collections import Counter
 
 def analizar_coche_con_ai(ruta_imagen):
     """
@@ -40,7 +42,7 @@ def analizar_coche_con_ai(ruta_imagen):
 class UXIAIService:
     def __init__(self):
         # Usamos la IP que sí hace ping y dio 200 en la shell
-        self.base_url = "http://192.168.1.24:8765"
+        self.base_url = getattr(settings, 'UXIA_CLASSIFIER_URL', 'http://192.168.1.24:8765')
         self.username = getattr(settings, 'UXIA_USERNAME', None)
         self.password = getattr(settings, 'UXIA_PASSWORD', None)
         self.token = self._authenticate()
@@ -53,9 +55,9 @@ class UXIAIService:
             return None
 
         payload = {
-            "username": "uxiaweb1",
-            "password": "uxiaweb314",
-            "device": "django-backend" 
+            "username": self.username,
+            "password": self.password,
+            "device": "django-backend"
         }
         
         try:
@@ -138,3 +140,104 @@ class UXIAIService:
             return response.json()
         except Exception as e:
             return {"status": "ERROR", "message": str(e)}
+
+    def _post_classification_request(self, image_file, endpoint: str):
+        headers = {"Authorization": f"Bearer {self.token}"}
+        if hasattr(image_file, 'seek'):
+            image_file.seek(0)
+
+        filename = getattr(image_file, 'name', 'image.jpg')
+        content_type = getattr(image_file, 'content_type', 'image/jpeg') or 'image/jpeg'
+        files = {'image': (filename, image_file, content_type)}
+        return requests.post(
+            f"{self.base_url}{endpoint}",
+            headers=headers,
+            files=files,
+            timeout=30,
+        )
+
+    def _extract_label_and_confidence(self, payload: Dict[str, Any]):
+        label = (
+            payload.get('label')
+            or payload.get('name')
+            or payload.get('class')
+            or payload.get('prediction')
+        )
+        confidence = payload.get('confidence') or payload.get('score') or payload.get('probability') or 0
+
+        if not label and isinstance(payload.get('result'), dict):
+            nested = payload['result']
+            label = nested.get('label') or nested.get('name')
+            confidence = nested.get('confidence') or nested.get('score') or nested.get('probability') or confidence
+
+        return label, confidence
+
+    def classify_image(self, image_file):
+        """Clasifica una imagen usando UXIA con consenso para reducir resultados inestables."""
+        if not self.token:
+            return {"ok": False, "message": "No token"}
+
+        endpoints = ["/classify", "/predict"]
+        last_error: Optional[str] = None
+
+        for endpoint in endpoints:
+            try:
+                response = self._post_classification_request(image_file, endpoint)
+
+                if response.status_code == 404:
+                    continue
+
+                if response.status_code in (401, 403):
+                    return {
+                        "ok": False,
+                        "message": "La API de clasificación rechazó la petición de autenticación.",
+                        "status_code": response.status_code,
+                    }
+
+                if response.ok:
+                    payload: Dict[str, Any] = response.json() if response.content else {}
+
+                    # First response + two extra attempts to reduce model jitter.
+                    responses = [payload]
+                    for _ in range(2):
+                        extra_response = self._post_classification_request(image_file, endpoint)
+                        if extra_response.ok and extra_response.content:
+                            responses.append(extra_response.json())
+
+                    extracted = [self._extract_label_and_confidence(p) for p in responses]
+                    labels = [label for label, _ in extracted if label]
+                    confidences = []
+                    for _, confidence in extracted:
+                        try:
+                            confidences.append(float(confidence))
+                        except (TypeError, ValueError):
+                            continue
+
+                    if labels:
+                        counts = Counter(labels)
+                        selected_label, selected_count = counts.most_common(1)[0]
+                        stability = selected_count / len(responses)
+                    else:
+                        selected_label = None
+                        stability = 0.0
+
+                    selected_confidence = max(confidences) if confidences else 0
+
+                    return {
+                        "ok": True,
+                        "label": selected_label,
+                        "confidence": selected_confidence,
+                        "stability": stability,
+                        "raw": payload,
+                        "status_code": response.status_code,
+                    }
+
+                last_error = f"{response.status_code}: {response.text}"
+
+            except Exception as exc:
+                last_error = str(exc)
+
+        return {
+            "ok": False,
+            "message": last_error or "No se pudo clasificar la imagen.",
+        }

@@ -29,15 +29,21 @@
     "noImage": "Sense imatge"
   },
   "identification": {
-    "title": "Identificació",
+    "title": "ITEM ID",
+    "selectedExpo": "Expo seleccionada",
     "cameraError": "No s'ha pogut accedir a la càmera. Assegura't de donar permisos.",
     "capture": "Capturar",
     "repeat": "Repetir",
     "analyzing": "Analitzant...",
+    "classify": "Classificar",
     "send": "Enviar",
     "openCamera": "Obrir càmera",
     "processingError": "Error al processar la identificació.",
-    "noResult": "Sense resultat"
+    "noResult": "Sense resultat",
+    "matchFound": "Coincidència trobada",
+    "noMatch": "No s'ha trobat cap coincidència clara.",
+    "confidence": "Confiança",
+    "viewDetails": "Veure detalls"
   },
   "itemDetail": {
     "title": "Detall de l'item",

@@ -23,6 +23,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from api.api import api as uxia_api
 from api.views import (
     procesar_identificacion, 
+    classify_item_id,
+    classify_item_id_b64,
     ExpoViewSet, 
     ItemViewSet, 
     current_user, 
@@ -51,7 +53,14 @@ urlpatterns = [
     path('api/auth/me/', current_user, name='current_user'),
     path('api/search/', search, name='search'),
     path('api/identificar/', procesar_identificacion),
+    path('api/item-description/', procesar_identificacion, name='item_description'),
+    path('api/classify/', classify_item_id, name='item_classify'),
+    path('api/classify_b64/', classify_item_id_b64, name='item_classify_b64'),
+    path('item-description/', procesar_identificacion, name='item_description_nomount'),
     path('identificar/', procesar_identificacion),
+    path('classify/', classify_item_id),
+    path('classify_b64/', classify_item_id_b64),
+    path('search/', search, name='search_nomount'),
 
     # --- ENTRENAMIENTO IA (UXIA) ---
     # Eliminamos el prefijo 'views.' porque ya importamos las funciones arriba

@@ -9,6 +9,14 @@ from .services.ai_service import analizar_coche_con_ai, UXIAIService
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from .serializers import ExpoSerializer, ItemSerializer, ImatgeSerializer # Importas el archivo que acabas de crear
+import unicodedata
+import difflib
+import base64
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+MIN_CLASSIFY_CONFIDENCE = 0.65
+MIN_CLASSIFY_STABILITY = 1.00
+REQUIRE_CLASSIFY_CONFIDENCE = False
 
 
 
@@ -22,6 +30,84 @@ def _guess_item_id_from_description(expo, descripcion):
             return item.id
 
     return None
+
+
+def _normalize_label(value):
+    """Normaliza una etiqueta eliminando acentos, guiones, sufijos de año
+    y retornando solo caracteres alfanuméricos en minúscula.
+    Ejemplos:
+    - 'Seat-Ibiza-2025' -> 'seatibiza'
+    - 'Opel Insignia' -> 'opelinsignia'
+    """
+    if not value:
+        return ''
+
+    # Unicode normalize y quitar diacríticos
+    normalized = unicodedata.normalize('NFKD', value)
+    normalized = ''.join(char for char in normalized if not unicodedata.combining(char))
+
+    # Reemplazar guiones/underscore por espacios y quitar sufijos año (4 dígitos)
+    normalized = normalized.replace('-', ' ').replace('_', ' ')
+    # Remover años al final: ' ... 2025' -> ''
+    parts = normalized.split()
+    if parts and parts[-1].isdigit() and len(parts[-1]) == 4:
+        parts = parts[:-1]
+    normalized = ' '.join(parts)
+
+    # Mantener solo caracteres alfanuméricos y espacios
+    cleaned = ''.join(ch.lower() if ch.isalnum() or ch.isspace() else ' ' for ch in normalized)
+    # Compactar espacios y devolver sin espacios para comparación simple
+    tokens = [t for t in cleaned.split() if t]
+    return ''.join(tokens)
+
+
+def _find_item_for_label(expo, label):
+    normalized_label = _normalize_label(label)
+    if not normalized_label:
+        return None
+
+    items = Item.objects.filter(expo=expo).only('id', 'nom').order_by('id')
+
+    # 1) Exact normalized match
+    for item in items:
+        item_label = _normalize_label(item.nom)
+        if item_label == normalized_label:
+            return item
+
+    # 2) Token containment: every token of the predicted label appears in item label
+    # (handles cases like 'seatibiza' vs 'seatibiza2025' or small format differences)
+    label_tokens = [t for t in unicodedata.normalize('NFKD', label).replace('-', ' ').replace('_', ' ').lower().split() if t]
+    if label_tokens:
+        for item in items:
+            item_tokens = [t for t in unicodedata.normalize('NFKD', item.nom).replace('-', ' ').replace('_', ' ').lower().split() if t]
+            if all(any(lt in it for it in item_tokens) for lt in label_tokens):
+                return item
+
+    # 3) Fuzzy matching as fallback
+    # Build list of normalized item labels -> map back to items
+    candidates = []
+    item_map = {}
+    for item in items:
+        il = _normalize_label(item.nom)
+        if il:
+            candidates.append(il)
+            item_map[il] = item
+
+    if candidates:
+        matches = difflib.get_close_matches(normalized_label, candidates, n=1, cutoff=0.75)
+        if matches:
+            return item_map.get(matches[0])
+
+    return None
+
+
+def _parse_confidence(raw_value):
+    if isinstance(raw_value, (int, float, str)):
+        try:
+            return float(raw_value)
+        except (TypeError, ValueError):
+            return 0.0
+    return 0.0
 
 @csrf_exempt
 def procesar_identificacion(request):
@@ -57,6 +143,207 @@ def procesar_identificacion(request):
         })
         
     return JsonResponse({'success': False, 'error': 'Faltan datos'}, status=400)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def classify_item_id(request):
+    """
+    ITEM ID: usa el clasificador entrenado de UXIA y devuelve el item de la BD.
+    """
+    expo_id = request.data.get('expo_id')
+    image_file = request.FILES.get('image') or request.FILES.get('foto')
+
+    if not expo_id or not image_file:
+        return Response(
+            {
+                'match': False,
+                'message': 'Faltan datos: expo_id e image son obligatorios.',
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    expo = get_object_or_404(Expo, id=expo_id)
+    intent = Intent.objects.create(
+        usuari=request.user if request.user.is_authenticated else None,
+        expo=expo,
+        url_foto_enviada=image_file,
+    )
+
+    service = UXIAIService()
+    if not service.token:
+        intent.resultat_identificacio = 'Error de autenticación con UXIA'
+        intent.save(update_fields=['resultat_identificacio'])
+        return Response(
+            {
+                'match': False,
+                'message': 'No se ha podido autenticar con el servicio de clasificación.',
+                'intent_id': intent.id,
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    classification = service.classify_image(intent.url_foto_enviada.file)
+    if not classification.get('ok'):
+        intent.resultat_identificacio = classification.get('message') or 'Error en la clasificación'
+        intent.save(update_fields=['resultat_identificacio'])
+        return Response(
+            {
+                'match': False,
+                'message': classification.get('message') or 'No se ha podido clasificar la imagen.',
+                'intent_id': intent.id,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    label = classification.get('label')
+    confidence_value = _parse_confidence(classification.get('confidence'))
+    has_confidence = confidence_value > 0
+    stability = _parse_confidence(classification.get('stability'))
+
+    matched_item = None
+    can_match = (
+        label
+        and stability >= MIN_CLASSIFY_STABILITY
+        and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE)
+    )
+
+    if can_match:
+        matched_item = _find_item_for_label(expo, label)
+
+    if matched_item:
+        intent.item_identificat = matched_item
+        intent.resultat_identificacio = label or matched_item.nom
+        intent.save()
+
+        return Response(
+            {
+                'match': True,
+                'message': f"Item identificado: {matched_item.nom}",
+                'intent_id': intent.id,
+                'item_id': matched_item.id,
+                'confidence': confidence_value,
+                'label': label,
+                'item': ItemSerializer(matched_item, context={'request': request}).data,
+                'photo_url': request.build_absolute_uri(intent.url_foto_enviada.url),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    intent.resultat_identificacio = label or 'Sin coincidencia clara'
+    intent.save(update_fields=['resultat_identificacio'])
+
+    if stability < MIN_CLASSIFY_STABILITY:
+        message = (
+            f"Predicción inestable ({stability:.2f}). "
+            "La IA no mantiene la misma clase en varios intentos."
+        )
+    elif has_confidence and confidence_value < MIN_CLASSIFY_CONFIDENCE:
+        message = (
+            f"Predicción con baja confianza ({confidence_value:.2f}). "
+            "No se devuelve match automático."
+        )
+    elif label:
+        message = (
+            f"La IA ha reconocido {label}, pero no existe un item coincidente en esta expo."
+        )
+    else:
+        message = "No s'ha trobat cap coincidència clara amb els items d'aquesta expo."
+
+    return Response(
+        {
+            'match': False,
+            'message': message,
+            'intent_id': intent.id,
+            'item_id': None,
+            'confidence': confidence_value,
+            'stability': stability,
+            'label': label,
+            'photo_url': request.build_absolute_uri(intent.url_foto_enviada.url),
+        },
+        status=status.HTTP_200_OK,
+    )
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def classify_item_id_b64(request):
+    """
+    Alternative endpoint that accepts JSON with base64-encoded image.
+    Use when multipart/form-data uploads fail on the server.
+    Body: { "expo_id": 2, "image_b64": "<base64string>" }
+    """
+    expo_id = request.data.get('expo_id')
+    image_b64 = request.data.get('image_b64')
+
+    if not expo_id or not image_b64:
+        return Response({'match': False, 'message': 'faltan expo_id e image_b64'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        decoded = base64.b64decode(image_b64)
+    except Exception:
+        return Response({'match': False, 'message': 'imagen base64 inválida'}, status=status.HTTP_400_BAD_REQUEST)
+
+    expo = get_object_or_404(Expo, id=expo_id)
+
+    uploaded_file = SimpleUploadedFile('upload.jpg', decoded, content_type='image/jpeg')
+
+    intent = Intent.objects.create(
+        usuari=request.user if request.user.is_authenticated else None,
+        expo=expo,
+        url_foto_enviada=uploaded_file,
+    )
+
+    service = UXIAIService()
+    if not service.token:
+        intent.resultat_identificacio = 'Error de autenticación con UXIA'
+        intent.save(update_fields=['resultat_identificacio'])
+        return Response({'match': False, 'message': 'No se ha podido autenticar con el servicio de clasificación.', 'intent_id': intent.id}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    uploaded_file.seek(0)
+    classification = service.classify_image(uploaded_file)
+
+    if not classification.get('ok'):
+        intent.resultat_identificacio = classification.get('message') or 'Error en la clasificación'
+        intent.save(update_fields=['resultat_identificacio'])
+        return Response({'match': False, 'message': classification.get('message') or 'No se ha podido clasificar la imagen.', 'intent_id': intent.id}, status=status.HTTP_200_OK)
+
+    label = classification.get('label')
+    confidence_value = _parse_confidence(classification.get('confidence'))
+    has_confidence = confidence_value > 0
+    stability = _parse_confidence(classification.get('stability'))
+
+    can_match = (
+        label
+        and stability >= MIN_CLASSIFY_STABILITY
+        and (not has_confidence or confidence_value >= MIN_CLASSIFY_CONFIDENCE)
+    )
+
+    if can_match:
+        matched_item = _find_item_for_label(expo, label)
+
+    if matched_item:
+        intent.item_identificat = matched_item
+        intent.resultat_identificacio = label or matched_item.nom
+        intent.save()
+        return Response({'match': True, 'message': f"Item identificado: {matched_item.nom}", 'intent_id': intent.id, 'item_id': matched_item.id, 'confidence': confidence_value, 'label': label, 'item': ItemSerializer(matched_item, context={'request': request}).data}, status=status.HTTP_200_OK)
+
+    intent.resultat_identificacio = label or 'Sin coincidencia clara'
+    intent.save(update_fields=['resultat_identificacio'])
+
+    if stability < MIN_CLASSIFY_STABILITY:
+        message = (
+            f"Predicción inestable ({stability:.2f}). "
+            "La IA no mantiene la misma clase en varios intentos."
+        )
+    elif has_confidence and confidence_value < MIN_CLASSIFY_CONFIDENCE:
+        message = (
+            f"Predicción con baja confianza ({confidence_value:.2f}). "
+            "No se devuelve match automático."
+        )
+    else:
+        message = 'No se encontró un Item con ese nombre.'
+
+    return Response({'match': False, 'message': message, 'intent_id': intent.id, 'label': label, 'confidence': confidence_value, 'stability': stability}, status=status.HTTP_200_OK)
 
 class ExpoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
