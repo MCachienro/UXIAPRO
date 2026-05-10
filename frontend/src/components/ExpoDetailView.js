@@ -32,6 +32,17 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
             >
                 + {t('expoDetail.createNewItem')}
             </button>
+
+            {/* MODAL DE CREACIÓN */}
+            <CreateItemModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)}
+                expoId={expo.id}
+                onCreated={() => {
+                    setIsModalOpen(false);
+                    if (onItemsUpdated) onItemsUpdated();
+                }}
+            />
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {expo.items.map((item) => {
@@ -76,16 +87,6 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
                     );
                 })}
             </div>
-            {/* MODAL DE CREACIÓN */}
-            <CreateItemModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)}
-                expoId={expo.id}
-                onCreated={() => {
-                    setIsModalOpen(false);
-                    if (onItemsUpdated) onItemsUpdated();
-                }}
-            />
         </div>
     );
 };
