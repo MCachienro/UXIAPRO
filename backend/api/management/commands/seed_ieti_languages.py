@@ -56,8 +56,9 @@ class Command(BaseCommand):
 
         for conf in exposiciones_config:
             # Crear/Obtener la Expo para este idioma
+            nombre_expo_idioma = f"IETI CAR SHOW ({conf['lenguaje']})"
             expo, _ = Expo.objects.get_or_create(
-                nom="IETI CAR SHOW",
+                nom=nombre_expo_idioma,
                 lenguaje=conf["lenguaje"],
                 defaults={
                     "descripcio": conf["desc"],
