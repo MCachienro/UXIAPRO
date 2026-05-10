@@ -1,7 +1,3 @@
-"""
-Seeder para cargar exposiciones IETI en múltiples idiomas.
-Crea versiones de la exposición en ES, CA, EN y FR.
-"""
 import os
 import io
 from django.contrib.auth import get_user_model
@@ -12,10 +8,8 @@ from api.models import Expo, Item, Imatge
 from django.conf import settings
 from PIL import Image, ImageDraw
 
-
 ALLOWED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 MAX_IMAGES_PER_CAR = 8
-
 
 def build_placeholder_png(label: str) -> bytes:
     image = Image.new("RGB", (1280, 720), (27, 49, 73))
@@ -24,213 +18,107 @@ def build_placeholder_png(label: str) -> bytes:
     draw.text((60, 80), "Foto no disponible", fill=(245, 245, 245))
     draw.text((60, 140), label[:60], fill=(170, 220, 255))
     draw.text((60, 610), "UXIA - placeholder automatico", fill=(210, 210, 210))
-
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     return buffer.getvalue()
 
-
 class Command(BaseCommand):
-    help = "Carga exposiciones IETI en múltiples idiomas (ES, CA, EN, FR)"
-
-    def _list_images(self, folder_path: str):
-        if not os.path.isdir(folder_path):
-            return []
-
-        files = [
-            filename
-            for filename in os.listdir(folder_path)
-            if os.path.isfile(os.path.join(folder_path, filename))
-            and filename.lower().endswith(ALLOWED_IMAGE_EXTENSIONS)
-        ]
-        return sorted(files)
+    help = "Carga dinámicamente exposiciones IETI en múltiples idiomas (ES, CA, EN, FR)"
 
     def handle(self, *args, **kwargs):
         User = get_user_model()
-        admin_user, created = User.objects.get_or_create(
+        admin_user, _ = User.objects.get_or_create(
             username="admin",
             defaults={"is_staff": True, "is_superuser": True, "is_active": True},
         )
-        if created:
+        if admin_user.check_password("admin123") is False:
             admin_user.set_password("admin123")
-            admin_user.save(update_fields=["password"])
-            self.stdout.write("Usuario admin creado: admin / admin123")
+            admin_user.save()
 
-        # Definir exposiciones en múltiples idiomas
-        exposiciones = [
-            {
-                "nom": "IETI CAR SHOW",
-                "lenguaje": "ES",
-                "descripcio": "Exposición oficial del centro IETI"
-            },
-            {
-                "nom": "IETI CAR SHOW",
-                "lenguaje": "CA",
-                "descripcio": "Exposició oficial del centre IETI"
-            },
-            {
-                "nom": "IETI CAR SHOW",
-                "lenguaje": "EN",
-                "descripcio": "Official exhibition of the IETI center"
-            },
-            {
-                "nom": "IETI CAR SHOW",
-                "lenguaje": "FR",
-                "descripcio": "Exposition officielle du centre IETI"
-            },
+        # 1. Definición de Exposiciones
+        exposiciones_config = [
+            {"lenguaje": "ES", "desc": "Exposición oficial del centro IETI", "item_prefix": "Vehículo"},
+            {"lenguaje": "CA", "desc": "Exposició oficial del centre IETI", "item_prefix": "Vehicle"},
+            {"lenguaje": "EN", "desc": "Official exhibition of the IETI center", "item_prefix": "Vehicle"},
+            {"lenguaje": "FR", "desc": "Exposition officielle du centre IETI", "item_prefix": "Véhicule"},
         ]
 
         ruta_base_fotos = os.path.join(settings.BASE_DIR, 'media', 'cotxes')
+        if not os.path.exists(ruta_base_fotos):
+            self.stderr.write(f"Error: Ruta {ruta_base_fotos} no encontrada.")
+            return
 
-        # Especificaciones de coches
-        coches = [
-            {
-                "nom": "Chevrolet-Aveo",
-                "carpeta": "Chevrolet-Aveo",
-                "destacada": "IMG_5637.HEIC.jpg",
-                "descripcio_es": "Utilitari compacte fiable, ideal per ciutat i trajectes del dia a dia.",
-                "descripcio_ca": "Utilitari compacte fiable, ideal per ciutat i trajectes del dia a dia.",
-                "descripcio_en": "Reliable compact utility, ideal for city and daily commutes.",
-                "descripcio_fr": "Utilitaire compact fiable, idéal pour la ville et les trajets quotidiens.",
-            },
-            {
-                "nom": "Ford-Focus",
-                "carpeta": "Ford-Focus",
-                "destacada": "Frente1.jpg",
-                "descripcio_es": "Berlina equilibrada amb bon comportament dinamic i consum contingut.",
-                "descripcio_ca": "Berlina equilibrada amb bon comportament dinamic i consum contingut.",
-                "descripcio_en": "Balanced sedan with good dynamic performance and reasonable consumption.",
-                "descripcio_fr": "Berline équilibrée avec bon comportement dynamique et consommation maîtrisée.",
-            },
-            {
-                "nom": "Opel-Insignia",
-                "carpeta": "Opel-Insignia",
-                "destacada": "WhatsApp Image 2026-04-16 at 17.51.10.jpeg",
-                "descripcio_es": "Model gran orientat a confort, amb disseny sobri i equipament complet.",
-                "descripcio_ca": "Model gran orientat a confort, amb disseny sobri i equipament complet.",
-                "descripcio_en": "Large model focused on comfort, with sober design and complete equipment.",
-                "descripcio_fr": "Grand modèle orienté confort, avec design sobre et équipement complet.",
-            },
-            {
-                "nom": "Seat-Ibiza-2025",
-                "carpeta": "Seat-Ibiza-2025",
-                "destacada": "IMG_3982.HEIC.jpg",
-                "descripcio_es": "Utility modern de nova generacio, agilit i enfocament juvenil.",
-                "descripcio_ca": "Utility modern de nova generacio, agilit i enfocament juvenil.",
-                "descripcio_en": "Modern new generation utility, agile and youth-focused.",
-                "descripcio_fr": "Utilitaire moderne de nouvelle génération, agile et orienté jeunesse.",
-            },
-            {
-                "nom": "Seat-Leon",
-                "carpeta": "Seat-Leon",
-                "destacada": "IMG-20260417-WA0020.jpg",
-                "descripcio_es": "Compacte esportiu molt versatil amb bona resposta i linees marcades.",
-                "descripcio_ca": "Compacte esportiu molt versatil amb bona resposta i linees marcades.",
-                "descripcio_en": "Very versatile sport compact with good response and marked lines.",
-                "descripcio_fr": "Compact sportif très polyvalent avec bonne réactivité et lignes marquées.",
-            },
-            {
-                "nom": "Seat-Leon-FR-2021",
-                "carpeta": "Seat-Leon-FR-2021",
-                "destacada": "ladoIzquierdo.jpg",
-                "descripcio_es": "Versio FR amb acabat esportiu, orientada a una conduccio mes dinamica.",
-                "descripcio_ca": "Versio FR amb acabat esportiu, orientada a una conduccio mes dinamica.",
-                "descripcio_en": "FR version with sporty finish, oriented towards more dynamic driving.",
-                "descripcio_fr": "Version FR avec finition sportive, orientée vers une conduite plus dynamique.",
-            },
-            {
-                "nom": "Seat-Toledo",
-                "carpeta": "Seat-Toledo",
-                "destacada": "IMG-20260417-WA0042.jpg",
-                "descripcio_es": "Berlina practica amb maleter ampli i enfocada a us familiar.",
-                "descripcio_ca": "Berlina practica amb maleter ampli i enfocada a us familiar.",
-                "descripcio_en": "Practical sedan with spacious trunk and focused on family use.",
-                "descripcio_fr": "Berline pratique avec grand coffre et orientée vers un usage familial.",
-            },
-            {
-                "nom": "Volkswagen",
-                "carpeta": "Volkswagen",
-                "destacada": "IMG_2766.HEIC.jpg",
-                "descripcio_es": "Model d'estil clasic de la marca, amb acabats robusts i elegants.",
-                "descripcio_ca": "Model d'estil clasic de la marca, amb acabats robusts i elegants.",
-                "descripcio_en": "Classic style model from the brand, with robust and elegant finishes.",
-                "descripcio_fr": "Modèle de style classique de la marque, avec finitions robustes et élégantes.",
-            },
-        ]
+        # 2. Escaneo de carpetas (Coches disponibles)
+        carpetas_coches = sorted([
+            d for d in os.listdir(ruta_base_fotos) 
+            if os.path.isdir(os.path.join(ruta_base_fotos, d))
+        ])
 
-        # Crear exposiciones en cada idioma
-        for expo_data in exposiciones:
-            expo, created = Expo.objects.get_or_create(
-                nom=expo_data["nom"],
-                lenguaje=expo_data["lenguaje"],
+        for conf in exposiciones_config:
+            # Crear/Obtener la Expo para este idioma
+            expo, _ = Expo.objects.get_or_create(
+                nom="IETI CAR SHOW",
+                lenguaje=conf["lenguaje"],
                 defaults={
-                    "descripcio": expo_data["descripcio"],
+                    "descripcio": conf["desc"],
                     "propietari": admin_user,
                 }
             )
 
-            # Limpiar items existentes para esta expo
+            # Limpiar items para regenerar
             Item.objects.filter(expo=expo).delete()
-            self.stdout.write(f"Preparada expo: {expo_data['nom']} ({expo_data['lenguaje']})")
+            self.stdout.write(self.style.SUCCESS(f"Procesando Expo: {conf['lenguaje']}"))
 
-            # Seleccionar descripción según idioma
-            idioma_key = f"descripcio_{expo_data['lenguaje'].lower()}"
-
-            # Crear items
-            for coche in coches:
+            for folder_name in carpetas_coches:
+                ruta_coche = os.path.join(ruta_base_fotos, folder_name)
+                nom_formateado = folder_name.replace('-', ' ')
+                
+                # Crear Item con descripción genérica en el idioma correspondiente
                 item = Item.objects.create(
                     expo=expo,
-                    nom=coche["nom"],
-                    descripcio=coche.get(idioma_key, coche["descripcio_es"])
+                    nom=nom_formateado,
+                    descripcio=f"{conf['item_prefix']} {nom_formateado}."
                 )
 
-                # Cargar imágenes
-                ruta_coche = os.path.join(ruta_base_fotos, coche["carpeta"])
-                imagenes = self._list_images(ruta_coche)
+                # Cargar imágenes de la carpeta
+                imagenes = sorted([
+                    f for f in os.listdir(ruta_coche)
+                    if f.lower().endswith(ALLOWED_IMAGE_EXTENSIONS)
+                ])
 
-                # Crear destacada primero
-                destacada_path = os.path.join(ruta_coche, coche["destacada"])
-                if os.path.isfile(destacada_path):
-                    with open(destacada_path, 'rb') as f:
-                        imatge_destacada = Imatge.objects.create(
-                            item=item,
-                            url_imatge=File(f, name=coche["destacada"]),
-                            tipus='PUBLICA',
-                            es_publica=True
-                        )
-                        item.imatge_destacada = imatge_destacada
-                        item.save(update_fields=["imatge_destacada"])
-
-                # Cargar resto de imágenes
-                count = 0
-                for img_filename in imagenes:
-                    if count >= MAX_IMAGES_PER_CAR:
-                        break
-                    if img_filename == coche["destacada"]:
-                        continue
-
-                    img_path = os.path.join(ruta_coche, img_filename)
-                    if os.path.isfile(img_path):
+                if imagenes:
+                    featured_img = None
+                    # Limitamos y cargamos
+                    for i, img_name in enumerate(imagenes[:MAX_IMAGES_PER_CAR]):
+                        img_path = os.path.join(ruta_coche, img_name)
                         try:
                             with open(img_path, 'rb') as f:
-                                Imatge.objects.create(
+                                django_file = File(f, name=img_name)
+                                imatge_obj = Imatge.objects.create(
                                     item=item,
-                                    url_imatge=File(f, name=img_filename),
+                                    url_imatge=django_file,
                                     tipus='PUBLICA',
                                     es_publica=True
                                 )
-                            count += 1
+                                if i == 0: # La primera es la destacada
+                                    featured_img = imatge_obj
                         except Exception as e:
-                            self.stderr.write(f"Error cargando {img_filename}: {str(e)}")
-                            # Usar placeholder si falla
-                            placeholder_data = build_placeholder_png(f"{coche['nom']} - {img_filename}")
-                            Imatge.objects.create(
-                                item=item,
-                                url_imatge=ContentFile(placeholder_data, name=f"{img_filename}.png"),
-                                tipus='PUBLICA',
-                                es_publica=True
-                            )
+                            self.stderr.write(f"Error en {img_name}: {e}")
 
-                self.stdout.write(f"  ✓ Item creado: {coche['nom']} ({count} imágenes)")
+                    item.imatge_destacada = featured_img
+                    item.save(update_fields=["imatge_destacada"])
+                else:
+                    # Fallback si no hay fotos
+                    placeholder = build_placeholder_png(nom_formateado)
+                    img_fallback = Imatge.objects.create(
+                        item=item,
+                        url_imatge=ContentFile(placeholder, name=f"fix_{folder_name}.png"),
+                        tipus='PUBLICA',
+                        es_publica=True
+                    )
+                    item.imatge_destacada = img_fallback
+                    item.save()
 
-        self.stdout.write(self.style.SUCCESS("✓ Seeder completado: Exposiciones IETI en 4 idiomas cargadas"))
+                self.stdout.write(f"  ✓ {nom_formateado} añadido a expo {conf['lenguaje']}")
+
+        self.stdout.write(self.style.SUCCESS("✓ Seeder multi-idioma completado automáticamente."))
