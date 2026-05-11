@@ -86,7 +86,9 @@ const AdminDashboard = ({ user, onLogout }) => {
             <button
               type="button"
               onClick={() => setActiveView('expos')}
-              className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              aria-pressed={activeView === 'expos'}
+              title={t('admin.myExpos')}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:bg-indigo-500 dark:shadow-indigo-950/30 dark:hover:bg-indigo-400"
             >
               <span aria-hidden="true">📁</span>
               <span>{t('admin.myExpos')}</span>
