@@ -7,6 +7,10 @@ from django.core.files.base import ContentFile
 from api.models import Expo, Item, Imatge
 from django.conf import settings
 from PIL import Image, ImageDraw
+import pillow_heif
+
+# Registrar HEIF con PIL para poder abrir archivos HEIF
+pillow_heif.register_heif_opener()
 
 ALLOWED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 MAX_IMAGES_PER_CAR = 8
@@ -81,15 +85,39 @@ class Command(BaseCommand):
                 featured = None
                 for i, img_name in enumerate(imatges_disponibles):
                     img_path = os.path.join(ruta_carpeta, img_name)
-                    with open(img_path, "rb") as f:
+                    
+                    # Convertir imagen a JPEG si es HEIF
+                    try:
+                        img = Image.open(img_path)
+                        # Convertir a RGB (elimina alfa y paleta)
+                        if img.mode in ('RGBA', 'P', 'LA', '1'):
+                            rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+                            if img.mode in ('RGBA', 'LA'):
+                                rgb_img.paste(img, mask=img.split()[-1])
+                            else:
+                                rgb_img.paste(img)
+                        else:
+                            rgb_img = img.convert('RGB') if img.mode != 'RGB' else img
+                        
+                        # Guardar como JPEG en memoria
+                        buffer = io.BytesIO()
+                        rgb_img.save(buffer, format='JPEG', quality=95)
+                        buffer.seek(0)
+                        
+                        # Cambiar extensión a .jpg si es necesario
+                        final_name = img_name.rsplit('.', 1)[0] + '.jpg' if img_name.lower().endswith(('.heic', '.heif')) else img_name
+                        
                         nova_img = Imatge.objects.create(
                             item=item,
-                            url_imatge=File(f, name=img_name),
+                            url_imatge=File(buffer, name=final_name),
                             tipus=Imatge.Tipus.PUBLICA,
                             es_publica=True,
                         )
                         if i == 0: # La primera imatge de la llista serà la destacada
                             featured = nova_img
+                    except Exception as e:
+                        self.stdout.write(self.style.WARNING(f"  Error procesando {img_name}: {e}"))
+                        continue
                 
                 item.imatge_destacada = featured
                 item.save()
