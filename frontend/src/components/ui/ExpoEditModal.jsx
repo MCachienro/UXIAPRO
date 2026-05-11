@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * ExpoEditModal - Componente para editar la información de una expo
@@ -10,6 +11,7 @@ import React, { useState, useEffect } from 'react';
  * - onSaveSuccess: function - Callback después de guardar exitosamente
  */
 export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ nom: '', descripcio: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -37,7 +39,7 @@ export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) 
   // PUT /api/rest/expos/{id}/
   const handleSave = async () => {
     if (!formData.nom.trim()) {
-      setError('El nombre de la expo es obligatorio');
+      setError(t('expoEdit.errors.requiredName'));
       return;
     }
 
@@ -59,7 +61,7 @@ export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) 
       );
 
       if (!response.ok) {
-        throw new Error('Error al guardar la expo');
+        throw new Error(t('expoEdit.errors.saveFailed'));
       }
 
       const updatedExpo = await response.json();
@@ -71,7 +73,7 @@ export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) 
       onClose();
 
     } catch (err) {
-      setError(err.message || 'Error al guardar la expo');
+      setError(err.message || t('expoEdit.errors.saveFailed'));
       console.error('Save error:', err);
     } finally {
       setLoading(false);
@@ -85,7 +87,7 @@ export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md mx-4 p-6 space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Editar Expo
+            {t('expoEdit.title')}
           </h2>
           <button
             onClick={onClose}
@@ -104,7 +106,7 @@ export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) 
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Nombre
+              {t('expoEdit.nameLabel')}
             </label>
             <input
               type="text"
@@ -113,13 +115,13 @@ export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) 
               onChange={handleChange}
               disabled={loading}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
-              placeholder="Ej: IETI Car Show"
+              placeholder={t('expoEdit.namePlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Descripción
+              {t('expoEdit.descriptionLabel')}
             </label>
             <textarea
               name="descripcio"
@@ -128,7 +130,7 @@ export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) 
               disabled={loading}
               rows="4"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
-              placeholder="Describe la expo..."
+              placeholder={t('expoEdit.descriptionPlaceholder')}
             />
           </div>
         </div>
@@ -139,14 +141,14 @@ export default function ExpoEditModal({ isOpen, onClose, expo, onSaveSuccess }) 
             disabled={loading}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 transition"
           >
-            Cancelar
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={loading}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded transition font-medium"
           >
-            {loading ? 'Guardando...' : 'Guardar'}
+            {loading ? t('common.saving') : t('common.save')}
           </button>
         </div>
       </div>

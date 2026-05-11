@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import CreateItemModal from './CreateItemModal';
+import IATrainingControl from './ui/IATrainingControl';
 
 const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditItem, onItemsUpdated }) => {
+    const { t } = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const refreshExpoData = () => {
+        if (onItemsUpdated) onItemsUpdated();
+        console.log("IA lista, refrescando datos de la expo...");
+    };
 
     return (
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 animate-in fade-in">
@@ -11,7 +18,7 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
                     onClick={onBack} 
                     className="text-indigo-600 font-bold hover:underline flex items-center gap-1"
                 >
-                    ← Tornar a MyExpos
+                    ← {t('expoDetail.backToMyExpos')}
                 </button>
             </div>
 
@@ -23,8 +30,10 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
                 onClick={() => setIsModalOpen(true)}
                 className="mb-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition"
             >
-                + Crear nuevo item
+                + {t('expoDetail.createNewItem')}
             </button>
+
+            <IATrainingControl expoId={expo.id} onTrainingComplete={refreshExpoData} />
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {expo.items.map((item) => {
@@ -49,7 +58,7 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
                                             key={img.id} 
                                             src={normalizeImageUrl(img.url_imatge)} 
                                             className="w-12 h-12 rounded object-cover border border-slate-200" 
-                                            alt="Detall" 
+                                            alt={t('expoDetail.detailAlt')} 
                                         />
                                     ))}
                                 </div>
@@ -58,11 +67,12 @@ const ExpoDetailView = ({ expo, onBack, normalizeImageUrl, onEditExpo, onEditIte
                             {/* Botón editar item (arriba a la derecha) */}
                             <button
                               onClick={() => onEditItem && onEditItem(item)}
-                              title="Editar item"
+                                                            title={t('expoDetail.editItem')}
                               className="absolute top-3 right-3 bg-white/90 px-2 py-1 rounded shadow"
                             >
                               ✏️
                             </button>
+
                         </div>
                     );
                 })}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import MultiImageUpload from './MultiImageUpload';
 
 /**
@@ -11,6 +12,7 @@ import MultiImageUpload from './MultiImageUpload';
  * - onSaveSuccess: function - Callback después de guardar exitosamente
  */
 export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ nom: '', descripcio: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -49,7 +51,7 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
   // PUT /api/rest/items/{id}/
   const handleSaveItemInfo = async () => {
     if (!formData.nom.trim()) {
-      setError('El nombre del item es obligatorio');
+      setError(t('itemEdit.errors.requiredName'));
       return;
     }
 
@@ -71,7 +73,7 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
       );
 
       if (!response.ok) {
-        throw new Error('Error al guardar el item');
+        throw new Error(t('itemEdit.errors.saveFailed'));
       }
 
       const updatedItem = await response.json();
@@ -81,7 +83,7 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
       }
 
     } catch (err) {
-      setError(err.message || 'Error al guardar el item');
+      setError(err.message || t('itemEdit.errors.saveFailed'));
       console.error('Save error:', err);
     } finally {
       setLoading(false);
@@ -105,7 +107,7 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-4 p-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Editar Item
+            {t('itemEdit.title')}
           </h2>
           <button
             onClick={onClose}
@@ -124,12 +126,12 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
         {/* Sección: Información del Item */}
         <div className="space-y-3 border-b border-gray-200 dark:border-gray-700 pb-4">
           <h3 className="font-semibold text-gray-900 dark:text-white">
-            Información básica
+            {t('itemEdit.basicInfo')}
           </h3>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Nombre
+              {t('itemEdit.nameLabel')}
             </label>
             <input
               type="text"
@@ -138,13 +140,13 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
               onChange={handleChange}
               disabled={loading}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
-              placeholder="Ej: Seat León 2023"
+              placeholder={t('itemEdit.namePlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Descripción
+              {t('itemEdit.descriptionLabel')}
             </label>
             <textarea
               name="descripcio"
@@ -153,7 +155,7 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
               disabled={loading}
               rows="3"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
-              placeholder="Describe el item..."
+              placeholder={t('itemEdit.descriptionPlaceholder')}
             />
           </div>
 
@@ -162,7 +164,7 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
             disabled={loading}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded transition font-medium"
           >
-            {loading ? 'Guardando...' : 'Guardar información'}
+            {loading ? t('common.saving') : t('itemEdit.saveInfo')}
           </button>
         </div>
 
@@ -171,7 +173,7 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
           onClick={() => setShowImageSection(!showImageSection)}
           className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded transition font-medium"
         >
-          {showImageSection ? '▼ Ocultar gestor de imágenes' : '▶ Mostrar gestor de imágenes'}
+          {showImageSection ? t('itemEdit.hideImageManager') : t('itemEdit.showImageManager')}
         </button>
 
         {/* Sección: MultiImageUpload (Actividad 19) */}
@@ -191,7 +193,7 @@ export default function ItemEditModal({ isOpen, onClose, item, onSaveSuccess }) 
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
-            Cerrar
+            {t('common.close')}
           </button>
         </div>
       </div>

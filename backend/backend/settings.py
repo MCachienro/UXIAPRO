@@ -153,6 +153,9 @@ STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Allow larger uploads for image classification (default ~2.5MB).
+# Increase if clients send base64 payloads or large images.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173').split(',')
 
 # Default primary key field type
@@ -180,3 +183,8 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# CONFIG ENTRENAR IA
+UXIA_API_URL = "https://uxiaweb1.ieti.site/"
+UXIA_USERNAME = "uxiaweb1"
+UXIA_PASSWORD = "uxiaweb314"
