@@ -19,7 +19,7 @@ const AdminDashboard = ({ user, onLogout }) => {
   const { t } = useTranslation();
   const { adminExpos, loading } = useAdminExpos(!!user);
   const [exposList, setExposList] = useState([]);
-  const [activeView, setActiveView] = useState('home');
+  const [activeView, setActiveView] = useState('expos');
   const [selectedExpo, setSelectedExpo] = useState(null);
   const [editingExpo, setEditingExpo] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
@@ -92,24 +92,7 @@ const AdminDashboard = ({ user, onLogout }) => {
               <span>{t('admin.myExpos')}</span>
               <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{adminExpos.length}</span>
             </button>
-            {activeView === 'expos' && (
-              <button
-                type="button"
-                onClick={() => setActiveView('home')}
-                className="rounded-full border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                {t('admin.backToSummary')}
-              </button>
-            )}
           </div>
-
-          {activeView === 'home' && (
-            <section className="rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800/60">
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-50">{t('admin.summaryTitle')}</h3>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{t('admin.summaryLine1', { exposCount: adminExpos.length, itemsCount: totalItems })}</p>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t('admin.summaryLine2')}</p>
-            </section>
-          )}
 
           {activeView === 'expos' && (
             <section className="space-y-4">

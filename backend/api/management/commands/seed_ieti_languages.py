@@ -7,6 +7,10 @@ from django.core.files.base import ContentFile
 from api.models import Expo, Item, Imatge
 from django.conf import settings
 from PIL import Image, ImageDraw
+import pillow_heif
+
+# Registrar HEIF con PIL para poder abrir archivos HEIF
+pillow_heif.register_heif_opener()
 
 ALLOWED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 MAX_IMAGES_PER_CAR = 8
@@ -56,7 +60,7 @@ class Command(BaseCommand):
 
         for conf in exposiciones_config:
             # Crear/Obtener la Expo para este idioma
-            nombre_expo_idioma = f"IETI CAR SHOW ({conf['lenguaje']})"
+            nombre_expo_idioma = f"{conf['lenguaje']} - IETI CAR SHOW"
             expo, _ = Expo.objects.get_or_create(
                 nom=nombre_expo_idioma,
                 lenguaje=conf["lenguaje"],
@@ -93,15 +97,35 @@ class Command(BaseCommand):
                     for i, img_name in enumerate(imagenes[:MAX_IMAGES_PER_CAR]):
                         img_path = os.path.join(ruta_coche, img_name)
                         try:
-                            with open(img_path, 'rb') as f:
-                                django_file = File(f, name=img_name)
+                            # Intentar convertir HEIF a JPEG si es necesario
+                            if img_name.lower().endswith(('.heic', '.heif', '.jpg', '.jpeg', '.png', '.webp')):
+                                img = Image.open(img_path)
+                                
+                                # Convertir a RGB (maneja RGBA, paleta, etc.)
+                                if img.mode in ('RGBA', 'P', 'LA', '1'):
+                                    rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+                                    if img.mode in ('RGBA', 'LA'):
+                                        rgb_img.paste(img, mask=img.split()[-1])
+                                    else:
+                                        rgb_img.paste(img)
+                                else:
+                                    rgb_img = img.convert('RGB') if img.mode != 'RGB' else img
+                                
+                                buffer = io.BytesIO()
+                                rgb_img.save(buffer, format='JPEG', quality=95)
+                                buffer.seek(0)
+                                
+                                # Si es HEIF/HEIC, cambiar extensión a .jpg
+                                final_name = img_name.rsplit('.', 1)[0] + '.jpg' if img_name.lower().endswith(('.heic', '.heif')) else img_name
+                                
+                                django_file = File(buffer, name=final_name)
                                 imatge_obj = Imatge.objects.create(
                                     item=item,
                                     url_imatge=django_file,
                                     tipus='PUBLICA',
                                     es_publica=True
                                 )
-                                if i == 0: # La primera es la destacada
+                                if i == 0:  # La primera es la destacada
                                     featured_img = imatge_obj
                         except Exception as e:
                             self.stderr.write(f"Error en {img_name}: {e}")
