@@ -15,6 +15,89 @@ pillow_heif.register_heif_opener()
 ALLOWED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 MAX_IMAGES_PER_CAR = 8
 
+CAR_DESCRIPTIONS = {
+    "Chevrolet-Aveo": {
+        "ES": "Chevrolet Aveo, un turismo compacto y práctico para uso urbano.",
+        "CA": "Chevrolet Aveo, un turisme compacte i pràctic per a ús urbà.",
+        "EN": "Chevrolet Aveo, a compact and practical car for city driving.",
+        "FR": "Chevrolet Aveo, une voiture compacte et pratique pour la ville.",
+    },
+    "Citroen-Berlingo": {
+        "ES": "Citroën Berlingo, un vehículo familiar versátil con gran capacidad de carga.",
+        "CA": "Citroën Berlingo, un vehicle familiar versàtil amb gran capacitat de càrrega.",
+        "EN": "Citroën Berlingo, a versatile family vehicle with excellent cargo space.",
+        "FR": "Citroën Berlingo, un véhicule familial polyvalent avec un grand volume de chargement.",
+    },
+    "Dacia": {
+        "ES": "Dacia Sandero, un coche económico y fiable para el día a día.",
+        "CA": "Dacia Sandero, un cotxe econòmic i fiable per al dia a dia.",
+        "EN": "Dacia Sandero, an affordable and reliable car for everyday use.",
+        "FR": "Dacia Sandero, une voiture abordable et fiable pour un usage quotidien.",
+    },
+    "Ford-Focus": {
+        "ES": "Ford Focus, una berlina compacta equilibrada entre confort y eficiencia.",
+        "CA": "Ford Focus, una berlina compacta equilibrada entre confort i eficiència.",
+        "EN": "Ford Focus, a compact hatchback balancing comfort and efficiency.",
+        "FR": "Ford Focus, une compacte équilibrée entre confort et efficacité.",
+    },
+    "Nissan-Interstar": {
+        "ES": "Nissan Interstar, una furgoneta amplia pensada para transporte profesional.",
+        "CA": "Nissan Interstar, una furgoneta àmplia pensada per al transport professional.",
+        "EN": "Nissan Interstar, a spacious van designed for professional transport.",
+        "FR": "Nissan Interstar, un fourgon spacieux conçu pour le transport professionnel.",
+    },
+    "Opel-Insignia": {
+        "ES": "Opel Insignia, una berlina elegante orientada al confort en carretera.",
+        "CA": "Opel Insignia, una berlina elegant orientada al confort a la carretera.",
+        "EN": "Opel Insignia, an elegant sedan focused on road comfort.",
+        "FR": "Opel Insignia, une berline élégante pensée pour le confort routier.",
+    },
+    "Seat-Ibiza-2025": {
+        "ES": "SEAT Ibiza 2025, un utilitario moderno, ágil y eficiente.",
+        "CA": "SEAT Ibiza 2025, un utilitari modern, àgil i eficient.",
+        "EN": "SEAT Ibiza 2025, a modern, agile and efficient hatchback.",
+        "FR": "SEAT Ibiza 2025, une citadine moderne, agile et efficace.",
+    },
+    "Seat-Leon": {
+        "ES": "SEAT León, un compacto deportivo con buen equilibrio entre diseño y prestaciones.",
+        "CA": "SEAT León, un compacte esportiu amb bon equilibri entre disseny i prestacions.",
+        "EN": "SEAT Leon, a sporty compact car balancing design and performance.",
+        "FR": "SEAT Leon, une compacte sportive qui équilibre design et performances.",
+    },
+    "Seat-Leon-FR-2021": {
+        "ES": "SEAT León FR 2021, una versión deportiva con un diseño más agresivo.",
+        "CA": "SEAT León FR 2021, una versió esportiva amb un disseny més agressiu.",
+        "EN": "SEAT Leon FR 2021, a sportier version with a more aggressive design.",
+        "FR": "SEAT Leon FR 2021, une version sportive au design plus agressif.",
+    },
+    "Seat-Toledo": {
+        "ES": "SEAT Toledo, una berlina práctica con buen espacio interior.",
+        "CA": "SEAT Toledo, una berlina pràctica amb bon espai interior.",
+        "EN": "SEAT Toledo, a practical sedan with plenty of interior space.",
+        "FR": "SEAT Toledo, une berline pratique offrant un bel espace intérieur.",
+    },
+    "Volkswagen": {
+        "ES": "Volkswagen, un turismo compacto de líneas sobrias y uso cotidiano.",
+        "CA": "Volkswagen, un turisme compacte de línies sòbries i ús quotidià.",
+        "EN": "Volkswagen, a compact car with clean lines and everyday usability.",
+        "FR": "Volkswagen, une voiture compacte aux lignes sobres pensée pour le quotidien.",
+    },
+}
+
+
+def build_item_description(folder_name: str, language: str, display_name: str) -> str:
+    car_metadata = CAR_DESCRIPTIONS.get(folder_name, {})
+    if language in car_metadata:
+        return car_metadata[language]
+
+    fallback_templates = {
+        "ES": "{name}, un vehículo de la exposición IETI.",
+        "CA": "{name}, un vehicle de l'exposició IETI.",
+        "EN": "{name}, a vehicle featured in the IETI exhibition.",
+        "FR": "{name}, un véhicule présenté dans l'exposition IETI.",
+    }
+    return fallback_templates.get(language, "{name}").format(name=display_name)
+
 def build_placeholder_png(label: str) -> bytes:
     image = Image.new("RGB", (1280, 720), (27, 49, 73))
     draw = ImageDraw.Draw(image)
@@ -70,6 +153,15 @@ class Command(BaseCommand):
                 }
             )
 
+            # Borrar archivos antiguos antes de regenerar, para no agotar cuota en el servidor.
+            imagenes_antiguas = Imatge.objects.filter(item__expo=expo)
+            for imatge in imagenes_antiguas:
+                if imatge.url_imatge:
+                    try:
+                        imatge.url_imatge.delete(save=False)
+                    except Exception as e:
+                        self.stderr.write(f"Error eliminando archivo antiguo {imatge.id}: {e}")
+
             # Limpiar items para regenerar
             Item.objects.filter(expo=expo).delete()
             self.stdout.write(self.style.SUCCESS(f"Procesando Expo: {conf['lenguaje']}"))
@@ -77,12 +169,21 @@ class Command(BaseCommand):
             for folder_name in carpetas_coches:
                 ruta_coche = os.path.join(ruta_base_fotos, folder_name)
                 nom_formateado = folder_name.replace('-', ' ')
+
+                if folder_name == "Citroen-Berlingo":
+                    nom_formateado = "Citroën Berlingo"
+                elif folder_name == "Seat-Leon":
+                    nom_formateado = "SEAT León"
+                elif folder_name == "Seat-Leon-FR-2021":
+                    nom_formateado = "SEAT León FR 2021"
+                elif folder_name == "Seat-Ibiza-2025":
+                    nom_formateado = "SEAT Ibiza 2025"
                 
                 # Crear Item con descripción genérica en el idioma correspondiente
                 item = Item.objects.create(
                     expo=expo,
                     nom=nom_formateado,
-                    descripcio=f"{conf['item_prefix']} {nom_formateado}."
+                    descripcio=build_item_description(folder_name, conf["lenguaje"], nom_formateado)
                 )
 
                 # Cargar imágenes de la carpeta
