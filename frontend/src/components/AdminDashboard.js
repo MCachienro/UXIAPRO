@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAdminExpos } from '../hooks/useAdminExpos';
 import ExpoDetailView from '../components/ExpoDetailView';
@@ -23,11 +23,6 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [selectedExpo, setSelectedExpo] = useState(null);
   const [editingExpo, setEditingExpo] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
-
-  const totalItems = useMemo(
-    () => exposList.reduce((sum, expo) => sum + (expo.items?.length || 0), 0),
-    [exposList]
-  );
 
   useEffect(() => {
     setExposList(adminExpos || []);

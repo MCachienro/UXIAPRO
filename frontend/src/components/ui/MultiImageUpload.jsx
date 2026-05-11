@@ -25,7 +25,7 @@ export default function MultiImageUpload({
     if (initialImages.length > 0 && images.length === 0) {
       setImages(initialImages);
     }
-  }, [initialImages]);
+  }, [initialImages, images.length]);
 
   const makeAbsoluteUrl = (url) => {
     if (!url) return '';
